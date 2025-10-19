@@ -44,7 +44,6 @@ public class OrderTicketService {
         orderTicket.setToken(generateOrderTicketToken(orderTicket));
         return modelMapper.map(orderTicketRepository.save(orderTicket), OrderTicketResponse.class);
     }
-
     public MessageResponse deleteOrderTicket(Long orderTicketId) {
         if (orderTicketRepository.getOrderTicketStatusByOrderTicketId(orderTicketId) != Constants.ORDER_TICKET_STATUS_INACTIVE) {
             throw new AppException(ErrorCode.ONLY_INACTIVE_ORDER_TICKETS_IS_UPDATABLE_AND_REMOVABLE);
@@ -55,24 +54,18 @@ public class OrderTicketService {
         orderTicketRepository.deleteById(orderTicketId);
         return new MessageResponse("Order ticket with id " + " is deleted successfully!");
     }
-
     // activate order ticket when its order is purchased
     public void activatePurchasedOrderTicket(OrderTicket orderTicket) {
         orderTicket.setStatus(Constants.ORDER_TICKET_STATUS_ACTIVE);
         orderTicket.setToken(generateOrderTicketToken(orderTicket));
     }
-    public Boolean validateOrderTicketQrToken(String receivedOrderTicketToken) {
-        try {
-            jwtService.
-        } catch (Exception e) {
-
-        }
-    }
-
-
-
-
-
+//    public Boolean validateOrderTicketQrToken(String receivedOrderTicketToken) {
+//        try {
+//            jwtService.
+//        } catch (Exception e) {
+//
+//        }
+//    }
 
     public String generateOrderTicketToken(OrderTicket orderTicket) {
         Map<String, Object> claims = new HashMap<>();

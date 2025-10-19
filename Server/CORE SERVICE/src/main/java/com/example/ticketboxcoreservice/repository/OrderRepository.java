@@ -10,10 +10,10 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 
 public interface OrderRepository extends JpaRepository<Order,Long> {
-    @Query("from Order o where o.customer.id=:userId and o.status =:status")
+    @Query("from Order o where o.buyer.id=:userId and o.status =:status")
     List<Order> findOrderByUserIdAndPurchasedAsList(Long userId, Integer status);
 
-    @Query("from Order o where o.customer.id=:userId and o.status =:status")
+    @Query("from Order o where o.buyer.id=:userId and o.status =:status")
     Page<Order> findOrderByUserIdAndPurchasedAsPage(Long userId, Integer status, Pageable pageable);
 
 }
