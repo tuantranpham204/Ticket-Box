@@ -1,0 +1,37 @@
+app:
+  jwt-secret: fe7276816fef85a611a8d9864c9679e491729cf34601a31d43aa30f866eb515d
+  jwt-expiration-milliseconds: '3600000'
+  order-ticket-jwt-secret: fe7276816fef85a611a8d9864c9679e491729cf34601a31d43aa30f866eb515d
+spring:
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: 'true'
+        show_sql: 'true'
+    hibernate:
+      ddl-auto: update
+  application:
+    name: TICKET BOX Core Service
+  datasource:
+    password: '12345678'
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    url: jdbc:mysql://localhost:3306/TICKET_BOX?createDatabaseIfNotExist=true
+logging:
+  level:
+    com:
+      cloudinary: DEBUG
+    org:
+      hibernate:
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE
+        SQL: DEBUG
+      springframework:
+        transaction: DEBUG
+        jdbc:
+          core: DEBUG
+        orm:
+          jpa: DEBUG
