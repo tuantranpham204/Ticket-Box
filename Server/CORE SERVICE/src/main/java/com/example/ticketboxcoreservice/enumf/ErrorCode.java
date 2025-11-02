@@ -33,7 +33,9 @@ public enum ErrorCode {
 
     INVALID_NUMBER_OF_CARTS(400, "Only 1 cart per person allowed", HttpStatus.BAD_REQUEST),
 
-
+    ORDER_TICKET_EXPIRED(400, "Order ticket expired.", HttpStatus.BAD_REQUEST),
+    ORDER_TICKET_USED(400, "Order ticket used.", HttpStatus.BAD_REQUEST),
+    ORDER_TICKET_UNMATCHED(400, "Validation failed: Scanned token does not match database token.", HttpStatus.BAD_REQUEST),
     ;
     private int code;
     private String message;

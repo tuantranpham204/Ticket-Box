@@ -36,7 +36,7 @@ public class EventService {
 
     //get userId from session storage
     @Transactional
-    public EventResponse createEvent(Long creatorUserId, EventRequest eventRequest) throws IOException {
+    public EventResponse createEvent(Long creatorUserId, EventRequest eventRequest)  {
         Event event = mapNotNullValuesFromEventReq(eventRequest, new Event());
         User host = userRepository.findById(creatorUserId).orElseThrow(
                 () -> new ResourceNotFoundException("user", "user id", creatorUserId));
@@ -59,7 +59,7 @@ public class EventService {
         return MessageResponse.builder().message("Event with id " + eventId + " has been approved successfully by approver with id " + approverUserId).build();
     }
     @Transactional
-    public EventResponse updateEvent(Long creatorUserId, Long eventId, EventRequest eventRequest) throws IOException {
+    public EventResponse updateEvent(Long creatorUserId, Long eventId, EventRequest eventRequest) {
         Event event = eventRepository.findById(eventId).orElseThrow(
                 () -> new ResourceNotFoundException("event", "event id", eventId));
         if (!event.getHost().getId().equals(creatorUserId)) throw new AppException(ErrorCode.ONLY_HOST_CAN_UPDATE_EVENT);
@@ -131,7 +131,7 @@ public class EventService {
 
 
 
-    private Event mapNotNullValuesFromEventReq(EventRequest request, Event event) throws IOException {
+    private Event mapNotNullValuesFromEventReq(EventRequest request, Event event) {
         // == Simple Primitive/String Fields ==
         Optional.ofNullable(request.getName()).ifPresent(event::setName);
         Optional.ofNullable(request.getOnline()).ifPresent(event::setOnline);
@@ -141,14 +141,21 @@ public class EventService {
         Optional.ofNullable(request.getStartDate()).ifPresent(event::setStartDate);
         Optional.ofNullable(request.getEndDate()).ifPresent(event::setEndDate);
         Optional.ofNullable(request.getInfo()).ifPresent(event::setInfo);
-        // Update Image
-        if (request.getImg() != null) {
-            event.setImg(modelMapper.map(imageService.uploadImage(request.getImg()), Image.class));
+
+        try {
+            // Update Image
+            if (request.getImg() != null) {
+                event.setImg(modelMapper.map(imageService.uploadImage(request.getImg()), Image.class));
+            }
+            // Update Banner
+            if (request.getBanner() != null) {
+                event.setBanner(modelMapper.map(imageService.uploadImage(request.getBanner()), Image.class));
+            }
+        } catch (IOException e) {
+
+            //
         }
-        // Update Banner
-        if (request.getBanner() != null) {
-            event.setBanner(modelMapper.map(imageService.uploadImage(request.getBanner()), Image.class));
-        }
+
         return event;
     }
 

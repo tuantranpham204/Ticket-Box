@@ -59,7 +59,7 @@ public class OrderService {
                 .build();
     }
 
-    public Order getCartByUserIdFunction(Long userId) {
+    private Order getCartByUserIdFunction(Long userId) {
         List<Order> orders = orderRepository.findOrderByUserIdAndPurchasedAsList(userId, Constants.ORDER_STATUS_NOT_PURCHASED);
         if (orders.size() != 1) throw new AppException(ErrorCode.INVALID_NUMBER_OF_CARTS);
         return orders.get(0);

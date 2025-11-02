@@ -27,7 +27,7 @@ public class OrderTicket {
     @JoinColumn(name = "ticket.id")
     private Ticket ticket;
 
-    private String ownerName;
+    private String ownerCID;
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "relationship.id")
     private Relationship relationship;

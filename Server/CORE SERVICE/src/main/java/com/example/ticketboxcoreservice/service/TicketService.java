@@ -84,7 +84,7 @@ public class TicketService {
         return new MessageResponse("Ticket with id " + ticketId + " has been declined");
     }
     @Transactional
-    public TicketResponse getTicketByUserId(Long ticketId) {
+    public TicketResponse getTicketByTicketId(Long ticketId) {
         Ticket ticket = ticketRepository.findById(ticketId).orElseThrow(
                 () -> new ResourceNotFoundException("event", "event id", ticketId));
         return modelMapper.map(ticket, TicketResponse.class);

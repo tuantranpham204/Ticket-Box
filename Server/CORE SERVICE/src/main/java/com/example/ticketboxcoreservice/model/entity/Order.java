@@ -27,7 +27,7 @@ public class Order{
     @OneToMany(mappedBy = "order", fetch = FetchType.LAZY,cascade = CascadeType.ALL)
     private Set<OrderTicket> orderTickets = new HashSet<>();
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "customer_id", referencedColumnName = "id")
+    @JoinColumn(name = "buyer_id", referencedColumnName = "id")
     private User buyer;
 
 }

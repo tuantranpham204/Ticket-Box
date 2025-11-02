@@ -8,7 +8,7 @@ public class Constants {
     public static final Long DEFAULT_AVATAR_IMG_ID = 1l;
     public static final Long DEFAULT_CATEGORY_IMAGE_ID = 2l;
     public static final Long DEFAULT_PRODUCT_IMAGE_ID = 3l;
-    public static final Long DEFAULT_SHOP_BANNER_ID = 6l;
+    public static final Long DEFAULT_SHOP_BANNER_ID =  6l;
 
     // event
     public static final Integer EVENT_STATUS_DECLINED = -1; // event creation request get declination from approvers
@@ -36,5 +36,6 @@ public class Constants {
     // OrderTicket
     public static final Integer ORDER_TICKET_STATUS_INACTIVE = 0; // order ticket is created and order is not purchased
     public static final Integer ORDER_TICKET_STATUS_ACTIVE = 1; // order ticket is created and order is purchased => QR code is generated
-    public static final Integer ORDER_TICKET_STATUS_USED = 2; // QR code is scanned
+    public static final Integer ORDER_TICKET_STATUS_USED = 3; // QR code is scanned
+    public static final Integer ORDER_TICKET_STATUS_PENDING = 2;
 }

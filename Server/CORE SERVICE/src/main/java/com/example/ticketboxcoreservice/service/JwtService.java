@@ -64,16 +64,6 @@ public class JwtService {
                 .signWith(getOrderTicketKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
-    private String buildToken(Map<String, Object> extraClaims, String subject, Long jwtExpiration){
-        return Jwts
-                .builder()
-                .setClaims(extraClaims)
-                .setSubject(subject)
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
-                .signWith(getSignInKey(), SignatureAlgorithm.HS256)
-                .compact();
-    }
     public long getExpirationTime() {
         return jwtExpiration;
     }
@@ -105,6 +95,51 @@ public class JwtService {
                 .parseClaimsJws(token)
                 .getBody();
     }
+
+    // --- NEW METHODS FOR ORDER TICKET TOKEN ---
+
+    /**
+     * Extracts all claims from an Order Ticket token using the orderTicketSecretKey.
+     * @param token The JWT token from the QR code.
+     * @return The claims principal.
+     */
+    public Claims extractAllClaimsFromOrderTicketToken(String token){
+        return Jwts
+                .parserBuilder()
+                .setSigningKey(getOrderTicketKey()) // Use the correct key
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
+    /**
+     * Extracts a specific claim from an Order Ticket token.
+     * @param token The JWT token.
+     * @param claimsResolver A function to resolve the desired claim.
+     * @return The claim.
+     */
+    public <T> T extractClaimFromOrderTicketToken(String token, Function<Claims, T> claimsResolver){
+        final Claims claims = extractAllClaimsFromOrderTicketToken(token);
+        return claimsResolver.apply(claims);
+    }
+
+    /**
+     * Checks if an Order Ticket token is expired or has an invalid signature.
+     * @param token The JWT token.
+     * @return True if expired or invalid, false otherwise.
+     */
+    public boolean isOrderTicketTokenExpired(String token){
+        try {
+            // This will fail if signature is invalid OR if expired
+            return extractClaimFromOrderTicketToken(token, Claims::getExpiration).before(new Date());
+        } catch (Exception e) {
+            // Catches SignatureException, ExpiredJwtException, MalformedJwtException, etc.
+            return true;
+        }
+    }
+
+    // --- END OF NEW METHODS ---
+
     private Key getSignInKey(){
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);

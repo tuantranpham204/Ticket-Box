@@ -39,7 +39,7 @@ public class User implements UserDetails {
     private Set<Event> hostedEvents = new HashSet<>();
     @OneToMany(mappedBy = "approver", fetch = FetchType.LAZY,cascade = CascadeType.ALL)
     private Set<Event> approvedEvents = new HashSet<>();
-    @OneToMany(mappedBy = "customer", fetch = FetchType.LAZY,cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "buyer", fetch = FetchType.LAZY,cascade = CascadeType.ALL)
     private Set<Order> orders = new HashSet<>();
     @OneToOne(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
     private Image avatar;
