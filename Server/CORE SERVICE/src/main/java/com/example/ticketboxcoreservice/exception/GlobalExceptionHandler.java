@@ -25,8 +25,8 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(apiResponse, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(IOException.class)
-    public ResponseEntity<ApiResponse> handleIOException(IOException exception,WebRequest webRequest){
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ApiResponse> handleRuntimeException(RuntimeException exception,WebRequest webRequest){
         ApiResponse apiResponse = ApiResponse.error(400, exception.getMessage());
         webRequest.getDescription(false);
         return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
