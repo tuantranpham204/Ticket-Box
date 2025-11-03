@@ -33,6 +33,9 @@ public class SecurityConfig {
 
                                 .requestMatchers("/api/auth/**").permitAll()
                                 .requestMatchers("/swagger-ui/index.html/**", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/events/category/{catId}").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/events/ticket/{ticketId}").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/tickets/event/{eventId}").permitAll()
 
                                 // USER endpoints
                                 .requestMatchers(HttpMethod.GET, "/api/users/{userId}/**").hasAnyRole("USER", "ADMIN", "APPROVER")
@@ -51,17 +54,22 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.POST, "/api/order-tickets/**").hasAnyRole("USER", "ADMIN", "APPROVER")
                                 .requestMatchers(HttpMethod.DELETE, "/api/order-tickets/**").hasAnyRole("USER", "ADMIN", "APPROVER")
 
+                                .requestMatchers(HttpMethod.GET, "/api/events/creator/**").hasAnyRole("USER", "ADMIN", "APPROVER")
                                 .requestMatchers(HttpMethod.PUT, "/api/users/{userId}/**").hasAnyRole("USER", "ADMIN", "APPROVER")
-//                                .requestMatchers(HttpMethod.POST, "api/images/**").hasAnyRole("USER", "ADMIN", "APPROVER")
-                                .requestMatchers(HttpMethod.PUT, "/api/users/{userId}/update-avatar").hasAnyRole("USER", "ADMIN", "APPROVER")
 
+                                //.requestMatchers(HttpMethod.POST, "api/images/**").hasAnyRole("USER", "ADMIN", "APPROVER")
+                                .requestMatchers(HttpMethod.PUT, "/api/users/{userId}/update-avatar").hasAnyRole("USER", "ADMIN", "APPROVER")
+                                .requestMatchers(HttpMethod.GET, "/api/events/event/**").hasAnyRole("USER", "ADMIN", "APPROVER")
+                                .requestMatchers(HttpMethod.GET, "/api/events/category/**").hasAnyRole("USER", "ADMIN", "APPROVER")
+                                .requestMatchers(HttpMethod.GET, "/api/events/ticket/**").hasAnyRole("USER", "ADMIN", "APPROVER")
+                                .requestMatchers(HttpMethod.GET, "/api/tickets/event/**").hasAnyRole("USER", "ADMIN", "APPROVER")
 
                                 //APPROVER endpoints
-
                                 .requestMatchers(HttpMethod.PUT, "/api/tickets/decline/**").hasAnyRole("ADMIN", "APPROVER")
                                 .requestMatchers(HttpMethod.PUT, "/api/tickets/approve/**").hasAnyRole("ADMIN", "APPROVER")
                                 .requestMatchers(HttpMethod.PUT, "/api/events/decline/**").hasAnyRole("ADMIN", "APPROVER")
                                 .requestMatchers(HttpMethod.PUT, "/api/events/approve/**").hasAnyRole("ADMIN", "APPROVER")
+                                .requestMatchers(HttpMethod.GET, "/api/events/approver/**").hasAnyRole("ADMIN", "APPROVER")
 
 
 

@@ -74,7 +74,7 @@ public class TicketController {
             @PathVariable("eventId") Long eventId,
             @RequestParam(value = "pageNo", defaultValue = "1", required = false) int pageNo,
             @RequestParam(value = "pageSize", defaultValue = "10", required = false) int pageSize,
-            @RequestParam(value = "sortBy", defaultValue = "eventId", required = false) String sortBy) {
+            @RequestParam(value = "sortBy", defaultValue = "ticketId", required = false) String sortBy) {
         Pageable pageable = PageRequest.of(pageNo - 1, pageSize, Sort.by(sortBy).ascending());
         ApiResponse response = ApiResponse.succeed(ticketService.getTicketsByEventId(eventId, pageable));
         return new ResponseEntity<>(response, HttpStatus.OK);

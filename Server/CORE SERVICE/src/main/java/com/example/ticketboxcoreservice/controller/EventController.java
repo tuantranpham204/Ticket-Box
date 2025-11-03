@@ -2,7 +2,9 @@ package com.example.ticketboxcoreservice.controller;
 
 
 import com.example.ticketboxcoreservice.model.dto.request.EventRequest;
+import com.example.ticketboxcoreservice.model.dto.request.ImageRequest;
 import com.example.ticketboxcoreservice.model.dto.response.ApiResponse;
+import com.example.ticketboxcoreservice.model.dto.response.EventResponse;
 import com.example.ticketboxcoreservice.service.EventService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -14,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 
@@ -28,7 +31,12 @@ public class EventController {
     @PostMapping("/create/{creatorUserId}")
     public ResponseEntity<ApiResponse> createEvent(
             @PathVariable("creatorUserId") Long creatorUserId,
-            @RequestBody EventRequest eventRequest) {
+            @RequestBody EventRequest eventRequest,
+            @RequestPart("img") MultipartFile img,
+            @RequestPart("banner") MultipartFile banner) {
+        ImageRequest imgReq = new ImageRequest(img);
+        ImageRequest bannerReq = new ImageRequest(banner);
+        eventRequest.setImg(imgReq); eventRequest.setBanner(bannerReq);
         ApiResponse response = ApiResponse.succeed(eventService.createEvent(creatorUserId, eventRequest));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -38,7 +46,12 @@ public class EventController {
     public ResponseEntity<ApiResponse> updateEvent(
             @PathVariable("creatorUserId") Long creatorUserId,
             @PathVariable("eventId") Long eventId,
-            @RequestBody EventRequest eventRequest) {
+            @RequestBody EventRequest eventRequest,
+            @RequestPart("img") MultipartFile img,
+            @RequestPart("banner") MultipartFile banner) {
+        ImageRequest imgReq = new ImageRequest(img);
+        ImageRequest bannerReq = new ImageRequest(banner);
+        eventRequest.setImg(imgReq); eventRequest.setBanner(bannerReq);
         ApiResponse response = ApiResponse.succeed(eventService.updateEvent(creatorUserId, eventId,eventRequest));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -112,11 +125,4 @@ public class EventController {
         ApiResponse response = ApiResponse.succeed(eventService.getEventByApproverUserId(approverUserId, pageable));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
-
-
-
-
-
-
-
 }

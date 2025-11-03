@@ -11,6 +11,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -55,6 +58,31 @@ public class OrderTicketController {
     public ResponseEntity<ApiResponse> validateOrderTicket(
             @RequestBody OrderTicket orderTicket) {
         ApiResponse response = ApiResponse.succeed(orderTicketService.confirmOrder(orderTicket));
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Operation(summary = "get cart tickets by user id")
+    @GetMapping("/cart/{userId}")
+    public ResponseEntity<ApiResponse> getCartTicketsByUserId(
+            @PathVariable("userId") Long userId,
+            @RequestParam(value = "pageNo", defaultValue = "1", required = false) int pageNo,
+            @RequestParam(value = "pageSize", defaultValue = "10", required = false) int pageSize,
+            @RequestParam(value = "sortBy", defaultValue = "orderTicketId", required = false) String sortBy
+    ) {
+        Pageable pageable = PageRequest.of(pageNo - 1, pageSize, Sort.by(sortBy).ascending());
+        ApiResponse response = ApiResponse.succeed(orderTicketService.getCartTicketsByUserId(userId, pageable));
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+    @Operation(summary = "get order tickets by order id")
+    @GetMapping("/order/{orderId}")
+    public ResponseEntity<ApiResponse> getOrderTicketsByOrderId(
+            @PathVariable("orderId") Long orderId,
+            @RequestParam(value = "pageNo", defaultValue = "1", required = false) int pageNo,
+            @RequestParam(value = "pageSize", defaultValue = "10", required = false) int pageSize,
+            @RequestParam(value = "sortBy", defaultValue = "orderTicketId", required = false) String sortBy
+    ) {
+        Pageable pageable = PageRequest.of(pageNo - 1, pageSize, Sort.by(sortBy).ascending());
+        ApiResponse response = ApiResponse.succeed(orderTicketService.getOrderTicketsByOrderId(orderId, pageable));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

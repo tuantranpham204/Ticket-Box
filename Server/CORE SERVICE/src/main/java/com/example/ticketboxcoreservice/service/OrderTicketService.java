@@ -6,7 +6,9 @@ import com.example.ticketboxcoreservice.exception.AppException;
 import com.example.ticketboxcoreservice.exception.ResourceNotFoundException;
 import com.example.ticketboxcoreservice.model.dto.request.OrderTicketQRCode;
 import com.example.ticketboxcoreservice.model.dto.request.OrderTicketRequest;
+import com.example.ticketboxcoreservice.model.dto.response.CustomPage;
 import com.example.ticketboxcoreservice.model.dto.response.MessageResponse;
+import com.example.ticketboxcoreservice.model.dto.response.OrderResponse;
 import com.example.ticketboxcoreservice.model.dto.response.OrderTicketResponse;
 import com.example.ticketboxcoreservice.model.entity.Order;
 import com.example.ticketboxcoreservice.model.entity.OrderTicket;
@@ -15,12 +17,15 @@ import com.example.ticketboxcoreservice.repository.OrderTicketRepository;
 import com.example.ticketboxcoreservice.repository.TicketRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -91,6 +96,31 @@ public class OrderTicketService {
         orderTicketRepository.save(orderTicket);
         return new MessageResponse("Order ticket with id " + orderTicket.getId() + " is confirmed!");
     }
+
+    public CustomPage<OrderTicketResponse> getCartTicketsByUserId(Long userId, Pageable pageable) {
+        Order cart =  getCartByUserIdFunction(userId);
+        Page<OrderTicket> cartTickets = orderTicketRepository.findByOrderId(cart.getId(), pageable);
+        return CustomPage.<OrderTicketResponse>builder()
+                .pageNo(cartTickets.getNumber()+1)
+                .pageSize(cartTickets.getSize())
+                .pageContent(cartTickets.getContent().stream()
+                        .map(cartTicket -> modelMapper.map(cartTicket, OrderTicketResponse.class))
+                        .collect(Collectors.toList()))
+                .build();
+    }
+
+    public CustomPage<OrderTicketResponse> getOrderTicketsByOrderId(Long orderId, Pageable pageable) {
+        Page<OrderTicket> orderTickets = orderTicketRepository.findByOrderId(orderId, pageable);
+        return CustomPage.<OrderTicketResponse>builder()
+                .pageNo(orderTickets.getNumber()+1)
+                .pageSize(orderTickets.getSize())
+                .pageContent(orderTickets.getContent().stream()
+                        .map(orderTicket -> modelMapper.map(orderTicket, OrderTicketResponse.class))
+                        .collect(Collectors.toList()))
+                .build();
+    }
+
+
 
     private String generateOrderTicketToken(OrderTicket orderTicket) {
         Map<String, Object> claims = new HashMap<>();
