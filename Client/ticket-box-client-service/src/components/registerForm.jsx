@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { useRegisterMutation } from '../hooks/useAuthHook';
 import { useUIStore } from '../store/useUiStore';
 
-function RegisterForm() {
+export default function RegisterForm() {
   const { register, handleSubmit, watch, formState: { errors } } = useForm();
   const { toggleAuthModalView } = useUIStore();
   const registerMutation = useRegisterMutation();
@@ -18,7 +18,7 @@ function RegisterForm() {
   return (
     <div className="flex flex-col gap-4">
       <h2 className="text-center text-3xl font-bold text-green-500">Register</h2>
-      <form onSubmit={handleSubmit(onSubmit)} className="mt-4 flex flex-col gap-4">
+      <form onSubmit={handleSubmit( onSubmit )} className="mt-4 flex flex-col gap-4">
         
         <input
           {...register('fullName', { required: 'Full Name is required' })}
@@ -52,7 +52,7 @@ function RegisterForm() {
         <input
           {...register('confirmPassword', { 
             required: 'Please confirm your password', 
-            validate: value => value === password || 'Passwords do not match'
+            validate: value => value == password || 'Passwords do not match'
           })}
           type="password"
           placeholder="Confirm Password"
@@ -82,5 +82,3 @@ function RegisterForm() {
     </div>
   );
 }
-
-export default RegisterForm;

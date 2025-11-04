@@ -12,7 +12,7 @@ import { useAuthStore } from './store/useAuthStore';
 
 // --- Page Components ---
 // We lazy-load pages to improve initial load time
-const HomePage = React.lazy(() => import('./pages/HomePage'));
+const HomePage = React.lazy(() => import('./pages/homePage'));
 // Add other pages here as you build them
 // const EventDetailPage = React.lazy(() => import('./pages/EventDetailPage'));
 // const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
@@ -27,7 +27,7 @@ const queryClient = new QueryClient({
   },
 });
 
-function App() {
+export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
@@ -108,6 +108,3 @@ const RoleBasedRoute = ({ children, roles }) => {
 
   return children; // Render the protected component
 };
-
-export default App;
-

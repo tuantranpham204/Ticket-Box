@@ -122,7 +122,7 @@ export default function Footer() {
 
                 {/* <!-- Copyright Section --> */}
                 <div className="border-t border-gray-700 mt-12 pt-8 text-center text-sm text-gray-400">
-                    <p>&copy; 2024 Ticketbox. All rights reserved.</p>
+                    <p>&copy; 2025 Ticketbox by Major Project Group 6. All rights reserved.</p>
                 </div>
 
             </div>

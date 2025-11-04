@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { useLoginMutation } from '../hooks/useAuthHook';
 import { useUIStore } from '../store/useUiStore';
 
-function LoginForm() {
+export default function LoginForm() {
   const { register, handleSubmit, formState: { errors } } = useForm();
   const { toggleAuthModalView } = useUIStore();
   const loginMutation = useLoginMutation();
@@ -15,7 +15,7 @@ function LoginForm() {
   return (
     <div className="flex flex-col gap-4">
       <h2 className="text-center text-3xl font-bold text-green-500">Login</h2>
-      <form onSubmit={handleSubmit(onSubmit)} className="mt-4 flex flex-col gap-4">
+      <form onSubmit={handleSubmit( onSubmit )} className="mt-4 flex flex-col gap-4">
         <input
           {...register('username', { required: 'Email/Username is required' })}
           placeholder="Email or username"
@@ -73,5 +73,3 @@ function LoginForm() {
     </div>
   );
 }
-
-export default LoginForm;

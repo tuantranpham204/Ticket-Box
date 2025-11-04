@@ -2,10 +2,8 @@ import axios from 'axios';
 import { useAuthStore } from '../store/useAuthStore';
 
 // Base URL from the API documentation
-const CORE_BASE_URL = import.meta.env.CORE_BASE_URL;
-
 const apiClient = axios.create({
-  baseURL: CORE_BASE_URL,
+  baseURL: import.meta.env.VITE_CORE_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -61,7 +59,7 @@ export const handleApiResponse = async (request) => {
     // `data` here is the Axios response data, which is our backend's ApiResponse object
     const apiResponse = response.data; 
     
-    if (apiResponse.code === 0 && apiResponse.data !== undefined) {
+    if (apiResponse.code == 200 && apiResponse.data !== undefined) {
       return apiResponse.data;
     } else {
       // Handle business logic errors (e.g., code: 1001, message: "Username taken")

@@ -4,7 +4,7 @@ import { useUIStore } from '../store/useUiStore';
 import LoginForm from './loginForm';
 import RegisterForm from './registerForm';
 
-function AuthModal() {
+export default function AuthModal() {
   const { isAuthModalOpen, closeAuthModal, authModalView } = useUIStore();
 
   if (!isAuthModalOpen) return null;
@@ -41,5 +41,3 @@ function AuthModal() {
     </div>
   );
 }
-
-export default AuthModal;
