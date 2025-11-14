@@ -13,8 +13,9 @@ import { useAuthStore } from './store/useAuthStore';
 // --- Page Components ---
 // We lazy-load pages to improve initial load time
 const HomePage = React.lazy(() => import('./pages/homePage'));
+
 // Add other pages here as you build them
-// const EventDetailPage = React.lazy(() => import('./pages/EventDetailPage'));
+const EventDetailPage = React.lazy(() => import('./pages/eventDetailPage'));
 // const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
 
 // Create a query client
@@ -44,9 +45,8 @@ export default function App() {
               
               {/* --- Public Routes --- */}
               <Route index element={<HomePage />} />
-              {/* Example of another public route:
-              <Route path="/event/:id" element={<EventDetailPage />} /> 
-              */}
+              <Route path="event/:eventId" element={<EventDetailPage />} />
+             
               
               {/* --- Protected Routes (Example) --- */}
               {/* Uncomment these as you build the components */}

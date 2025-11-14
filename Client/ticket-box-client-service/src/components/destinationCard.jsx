@@ -7,7 +7,7 @@ const DestinationCard = ({ dest }) => (
     className="relative h-64 w-full transform overflow-hidden rounded-lg shadow-lg transition-transform duration-300 hover:-translate-y-1"
   >
     <img 
-      src={dest.imageUrl} 
+      src={dest.imageUrl}     
       alt={dest.name} 
       className="h-full w-full object-cover"
       onError={(e) => e.currentTarget.src = 'https://placehold.co/400x500/111/fff?text=Error'}

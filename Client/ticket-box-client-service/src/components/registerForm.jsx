@@ -69,7 +69,6 @@ export default function RegisterForm() {
         </button>
       </form>
       
-      {/* Toggle to Login */}
       <p className="mt-4 text-center text-sm">
         Already have an account?{' '}
         <button

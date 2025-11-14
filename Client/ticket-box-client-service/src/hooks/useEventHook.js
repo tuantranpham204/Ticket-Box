@@ -1,102 +1,94 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import apiClient, { handleApiResponse } from '../api/apiClient';
 
 // --- API Functions ---
-// These functions define how to fetch/mutate data.
 
+/**
+ * Fetches public details for a single event.
+ * GET /api/events/event/{eventId}
+ */
 const getEventById = (eventId) => {
-  return handleApiResponse(apiClient.get(`/api/events/event/${eventId}`));
+  if (!eventId) return Promise.reject(new Error('Event ID is required.'));
+  return handleApiResponse(apiClient.get(`/events/event/${eventId}`));
 };
 
-const updateEvent = ({ eventId, creatorUserId, formData }) => {
-  // We send formData directly as it's multipart/form-data
-  return handleApiResponse(
-    apiClient.put(`/api/events/update/${eventId}/${creatorUserId}`, formData, {
-      headers: {
-        // Axios will automatically set the correct Content-Type for FormData
-        'Content-Type': 'multipart/form-data',
-      },
-    })
-  );
+/**
+ * Fetches approved tickets for a single event.
+ * GET /api/tickets/event/{eventId}
+ * Note: Your API doc shows this is paginated.
+ */
+const getTicketsByEventId = (eventId) => {
+  if (!eventId) return Promise.reject(new Error('Event ID is required.'));
+  // Fetches the first page of tickets
+  return handleApiResponse(apiClient.get(`/tickets/event/${eventId}`, {
+    params: {
+      pageNo: 1,
+      pageSize: 50, // Get up to 50 ticket types
+    }
+  }));
 };
 
-const approveEvent = ({ eventId, approverUserId }) => {
-  return handleApiResponse(
-    apiClient.put(`/api/events/approve/${eventId}/${approverUserId}`)
-  );
+/**
+ * --- NEW ---
+ * Fetches a paginated list of approved events by category.
+ * GET /api/events/category/{catId}
+ */
+const getEventsByCategory = (categoryId, page = 1, pageSize = 10) => {
+  if (!categoryId) return Promise.reject(new Error('Category ID is required.'));
+  
+  return handleApiResponse(apiClient.get(`/events/category/${categoryId}`, {
+    params: {
+      pageNo: page,
+      pageSize: pageSize,
+      // sortBy: 'startDate' // We can add sorting later
+    }
+  }));
+  // This will return the CustomPage<EventResponse> object
 };
+
 
 // --- React Query Hooks ---
-// These hooks are used by our components to interact with the API.
 
 /**
- * Hook to fetch public details for a single event.
- * @param {number} eventId
+ * Hook to fetch details for a single event.
+ * Caches the data with the key ['event', eventId]
  */
-export const useGetEvent = (eventId) => {
+export const useEventDetails = (eventId) => {
   return useQuery({
-    queryKey: ['event', eventId], // Unique key for this query
+    queryKey: ['event', eventId],
     queryFn: () => getEventById(eventId),
-    enabled: !!eventId, // Only run if eventId is provided
+    enabled: !!eventId, // Only run the query if eventId is not null/undefined
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 };
 
 /**
- * Hook to update an event.
- * This demonstrates the "GOLDEN RULE" of cache invalidation.
+ * Hook to fetch tickets for a single event.
+ * Caches data with key ['eventTickets', eventId]
  */
-export const useUpdateEvent = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: updateEvent, // The function that performs the update
-    onSuccess: (data, variables) => {
-      // --- THE GOLDEN RULE ---
-      // The PUT was successful. The backend's Redis cache is cleared.
-      // Now, we MUST invalidate our client-side cache to force a refetch.
-      console.log('Update successful, invalidating event cache...');
-      queryClient.invalidateQueries({ queryKey: ['event', variables.eventId] });
-      
-      // We can also invalidate lists where this event appears.
-      queryClient.invalidateQueries({ queryKey: ['events', 'creator'] });
-    },
-    onError: (error) => {
-      // Handle mutation errors (e.g., show a toast notification)
-      console.error('Failed to update event:', error.message);
-    },
+export const useEventTickets = (eventId) => {
+  return useQuery({
+    queryKey: ['eventTickets', eventId],
+    queryFn: () => getTicketsByEventId(eventId),
+    enabled: !!eventId,
+    staleTime: 1000 * 60 * 2, // Cache for 2 minutes (tickets change more often)
   });
 };
 
 /**
- * Hook for an Approver to approve an event.
- * This also follows the "Golden Rule".
+ * --- NEW ---
+ * Hook to fetch events for a specific category.
+ * Caches data with key ['events', 'category', categoryId]
  */
-export const useApproveEvent = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: approveEvent,
-    onSuccess: (data, variables) => {
-      // --- THE GOLDEN RULE ---
-      console.log('Approve successful, invalidating caches...');
-      
-      // 1. Invalidate the specific event
-      queryClient.invalidateQueries({ queryKey: ['event', variables.eventId] });
-      
-      // 2. Invalidate the approver's "to-do" list
-      queryClient.invalidateQueries({ queryKey: ['events', 'approver'] });
-    },
-    onError: (error) => {
-      console.error('Failed to approve event:', error.message);
-    },
+export const useEventsByCategory = (categoryId) => {
+  return useQuery({
+    queryKey: ['events', 'category', categoryId],
+    queryFn: () => getEventsByCategory(categoryId), // Fetches page 1, 10 items
+    enabled: !!categoryId,
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 };
 
-// ... We would create similar hooks for all other endpoints ...
-// - useGetEventsByCategory(categoryId, pageNo, pageSize)
-// - useCreateEvent()
-// - useGetCart(userId)
-// - useAddToCart()
-// - usePurchaseCart()
-// - useValidateQrCode()
-// - useConfirmQrCode()
+// --- TODO: Add Mutations (Create, Update, Approve) ---
+// We will add `useMutation` hooks here for creating, updating,
+// and approving events, following the "Golden Rule".

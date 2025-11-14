@@ -1,21 +1,28 @@
+import React from 'react';
 import { Link } from 'react-router-dom';
-import EventCard from './eventCard';
-import { 
-  ArrowRight 
-} from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
+import EventCard from './EventCard';
 
-
+/**
+ * Reusable horizontal scrolling row for events
+ */
 const EventCarouselRow = ({ title, events, link = "#" }) => (
   <div className="mb-12">
     <div className="mb-4 flex items-center justify-between">
       <h3 className="text-2xl font-semibold text-white">{title}</h3>
       <Link to={link} className="flex items-center text-sm text-blue-400 hover:underline">
-        More <ArrowRight className="ml-1 h-4 w-4" />
+        See more <ArrowRight className="ml-1 h-4 w-4" />
       </Link>
     </div>
-    <div className="flex space-x-4 overflow-x-auto pb-4">
+    
+    {/* --- FIX ---
+      - Added `flex-nowrap` to force a single line.
+      - This container will now scroll horizontally.
+    --- END FIX --- */}
+    <div className="flex flex-nowrap space-x-4 overflow-x-auto pb-4">
       {events.map((event) => (
-        <div key={event.id} className="w-1/4 min-w-[280px]">
+        // Set a fixed width and prevent shrinking to ensure cards don't wrap
+        <div key={event.id} className="w-[280px] flex-shrink-0">
           <EventCard event={event} />
         </div>
       ))}
