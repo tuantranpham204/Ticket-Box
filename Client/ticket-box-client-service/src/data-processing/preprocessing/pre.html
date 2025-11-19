@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hiển thị nội dung từ JSON</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        #download-btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <button id="download-btn">Tải PDF</button>
+
+    <h1>Nội dung trang</h1>
+
+    <div id="content-container"></div>
+
+    <script>
+        const container = document.getElementById('content-container');
+        const downloadBtn = document.getElementById('download-btn');
+
+
+        function generatePDF() {
+
+            const element = document.getElementById('content-container');
+
+            // Tùy chọn cho file PDF
+            const opt = {
+              margin:       1, // Căn lề (đơn vị inch)
+              filename:     'file_cua_toi.pdf', // Tên file
+              image:        { type: 'jpeg', quality: 0.98 },
+              html2canvas:  { scale: 2 }, // Tăng độ phân giải
+              jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
+            // Chạy lệnh chuyển đổi và tự động tải file
+            html2pdf().from(element).set(opt).save();
+        }
+
+        // Gán sự kiện click cho nút bấm
+        downloadBtn.addEventListener('click', generatePDF);
+
+
+        // --- PHẦN TẢI JSON (như cũ) ---
+        fetch('data.json')
+            .then(response => response.json())
+            .then(data => {
+                const allHtml = data.join('');
+                container.innerHTML = allHtml;
+            })
+            .catch(error => {
+                console.error('Lỗi khi tải JSON:', error);
+                container.textContent = 'Không thể tải dữ liệu.';
+            });
+    </script>
+
+</body>
+</html>
