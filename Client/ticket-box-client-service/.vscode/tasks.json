@@ -1,0 +1,25 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "npm",
+      "script": "dev",
+      "label": "npm: dev", // This name must match preLaunchTask
+      "isBackground": true,
+      "problemMatcher": {
+        // This regex watches the terminal output.
+        // It tells the debugger to proceed when it sees
+        // "ready in" (for Vite) or "Compiled successfully" (for CRA).
+        "owner": "react-scripts",
+        "pattern": {
+          "regexp": ".*(ready in|Compiled successfully).*"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*(VITE|react-scripts).*",
+          "endsPattern": ".*(ready in|Compiled successfully).*"
+        }
+      }
+    }
+  ]
+}

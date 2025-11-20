@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Search, Ticket, User, PlusCircle } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 import { useUIStore } from '../store/useUiStore';
@@ -26,10 +26,10 @@ export default function Header() {
           <div className="relative w-full">
             <input
               type="text"
-              placeholder="Search..."
+              placeholder="Search events..."
               className="w-full rounded-full bg-gray-800 py-2.5 pl-10 pr-20 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+            <Search id="searchbar" className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400"   />
             <button className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-full bg-gray-700 px-4 py-1.5 text-sm font-semibold hover:bg-gray-600">
               Search
             </button>

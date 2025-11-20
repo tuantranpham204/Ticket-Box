@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "pwa-msedge", // Using the modern "pwa-msedge" debugger
+      "request": "launch",
+      "name": "Launch React (Edge)",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}",
+      "preLaunchTask": "npm: dev" // This links to the task below
+    }
+  ]
+}

@@ -1,7 +1,8 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useEventDetails, useEventTickets } from '../hooks/useEventHook';
-import { MapPin, Calendar, Clock, Loader2, AlertCircle, ArrowRight } from 'lucide-react';
+import { useEventByEventId } from '../hooks/useEventHook';
+import { useGetTicketsByEventId, useLowestTicketPriceByEventId } from '../hooks/useTicketHook'; 
+import { MapPin, Calendar, Clock, Loader2, AlertCircle, ArrowRight, Building2, Map } from 'lucide-react';
 import EventCard from '../components/eventCard'; // For "You may also like"
 
 // --- Mock Data for "You may also like" ---
@@ -12,22 +13,13 @@ const mockRelatedEvents = [
   { id: 18, title: "VIEWING PARTY Chung Kết Tổng CKTG 2025", date: "09 Tháng 11, 2025", imageUrl: "https://placehold.co/400x300/201040/fff?text=VIEWING+PARTY", price: "299.000đ" },
   { id: 19, title: "COUNTDOWN PARTY 2026 - PHUQUOC'S BIGGEST BOLLYWOOD BASH", date: "31 Tháng 12, 2025", imageUrl: "https://placehold.co/400x300/a02040/fff?text=BOLLYWOOD+BASH", price: "500.000đ" },
 ];
-// --- End Mock Data ---
 
-
-/**
- * Loading component
- */
 const LoadingSpinner = () => (
   <div className="flex min-h-[50vh] items-center justify-center text-white">
     <Loader2 className="h-12 w-12 animate-spin text-blue-500" />
     <span className="ml-4 text-xl">Loading Event Details...</span>
   </div>
 );
-
-/**
- * Error component
- */
 const ErrorDisplay = ({ message }) => (
   <div className="flex min-h-[50vh] flex-col items-center justify-center rounded-lg border border-red-700 bg-red-900/20 p-8 text-white">
     <AlertCircle className="h-12 w-12 text-red-500" />
@@ -38,29 +30,101 @@ const ErrorDisplay = ({ message }) => (
     </Link>
   </div>
 );
+const AddressDisplay = ({ addressString, compact = false }) => {
+  // Parse the address JSON safely
+  const addressData = React.useMemo(() => {
+    if (!addressString) return null;
+    try {
+      // Try parsing as JSON
+      const parsed = JSON.parse(addressString);
+      // Basic validation to ensure it has expected keys
+      if (parsed && typeof parsed === 'object' && (parsed.venue || parsed.location)) {
+        return parsed;
+      }
+    } catch (e) {
+      // If parsing fails, treat it as a plain legacy string
+      return { location: addressString, venue: null, city: null };
+    }
+    return { location: addressString, venue: null, city: null };
+  }, [addressString]);
 
-/**
- * Main Event Detail Page
- */
+  if (!addressData) return <span>Location TBD</span>;
+
+  // Compact View (for Sticky Header)
+  if (compact) {
+    return (
+      <div className="flex flex-col text-xs sm:text-sm">
+        {addressData.venue && (
+          <span className="font-bold text-white">{addressData.venue}</span>
+        )}
+        <span className="truncate text-gray-400">
+          {addressData.location}
+          {addressData.city ? `, ${addressData.city}` : ''}
+        </span>
+      </div>
+    );
+  }
+
+  // Full View (for Info Box)
+  return (
+    <div className="flex flex-col space-y-1">
+      {addressData.venue && (
+        <div className="flex items-start gap-2">
+          <Building2 className="h-5 w-5 flex-shrink-0 text-blue-400 mt-0.5" />
+          <div>
+            <span className="block font-bold text-white">{addressData.venue}</span>
+            <span className="text-sm text-gray-400">Venue</span>
+          </div>
+        </div>
+      )}
+      <div className="flex items-start gap-2">
+        <MapPin className="h-5 w-5 flex-shrink-0 text-blue-400 mt-0.5" />
+        <div>
+          <span className="block text-gray-300">{addressData.location}</span>
+          {addressData.city && <span className="text-sm text-gray-500">{addressData.city}</span>}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const EventDetailPage = () => {
   const { eventId } = useParams();
-  
-  // Fetch event details and tickets
   const { 
     data: event, 
     isLoading: isLoadingEvent, 
     isError: isErrorEvent, 
     error: errorEvent 
-  } = useEventDetails(eventId);
-  
+  } = useEventByEventId(eventId);
   const { 
     data: tickets, 
     isLoading: isLoadingTickets, 
     isError: isErrorTickets, 
     error: errorTickets 
-  } = useEventTickets(eventId);
+  } = useGetTicketsByEventId(eventId);
+  const { 
+    data: priceData, 
+    isLoading: isLoadingPrice, 
+    isError: isErrorPrice } = useLowestTicketPriceByEventId(eventId);
 
-  // --- Render States ---
+    // formatting helper
+    const formatPrice = (price) => {
+      if (price === null || price === undefined) return "TBD";
+      return `${price.toLocaleString()} đ`;
+    };
+  
+    let displayPrice;
+    if (isLoadingPrice) {
+      displayPrice = "Loading...";
+    } else if (isErrorPrice || priceData === null) {
+      displayPrice = "Contact for price";
+    } else {
+      displayPrice = priceData ? formatPrice(priceData.lowestPrice) : '';
+    }
+
+  
+
+
   if (isLoadingEvent) {
     return (
       <div className="bg-gray-900 py-8">
@@ -81,35 +145,33 @@ const EventDetailPage = () => {
     );
   }
 
-  // --- Main Content ---
-  // Mock data for fields not in your API docs
+
   const mockEvent = {
     ...event,
     title: event?.name || "Event Title",
     bannerUrl: event?.banner?.url || "https://placehold.co/1200x500/1a1a1a/ffffff?text=Event+Banner",
     organizer: {
-      name: event?.orgName || "May Lang Thang",
+      name: event?.orgName || "Organization Name",
       description: event?.orgInfo || "Nơi âm nhạc và cảm xúc thăng hoa",
       logoUrl: "https://placehold.co/200x200/ffffff/111?text=MAY"
     },
     pdfInfoUrl: event?.info || "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" // Using a dummy PDF
   };
 
-  return (
+return (
     <div className="bg-gray-900 text-white">
-      {/* --- Sticky Header (as per screenshot) --- */}
-      <div className="sticky top-[72px] z-30 border-b border-gray-700 bg-gray-900/90 py-4 backdrop-blur-md">
+      {/* --- Sticky Header --- */}
+      <div className="sticky top-20 z-30 border-b border-gray-700 bg-gray-900/90 py-3 backdrop-blur-md">
         <div className="container mx-auto flex max-w-7xl items-center justify-between px-4">
-          <div className="flex flex-col">
-            <h1 className="text-xl font-bold">{mockEvent.title}</h1>
-            <div className="flex items-center space-x-4 text-sm text-gray-400">
-              <div className="flex items-center">
-                <MapPin className="mr-1.5 h-4 w-4" />
-                <span>{mockEvent.address || "Location TBD"}</span>
-              </div>
+          <div className="flex flex-col overflow-hidden">
+            <h1 className="truncate text-lg font-bold">{mockEvent.title}</h1>
+            {/* Use Compact Address Display */}
+            <div className="mt-1 flex items-center text-gray-400">
+              <MapPin className="mr-1.5 h-4 w-4 flex-shrink-0" />
+              <AddressDisplay addressString={mockEvent.address} compact={true} />
             </div>
           </div>
-          <button className="rounded-full bg-green-600 px-6 py-2 font-semibold text-white transition-colors hover:bg-green-700">
+          <button className="ml-4 flex-shrink-0 rounded-full bg-green-600 px-6 py-2 font-semibold text-white transition-colors hover:bg-green-700">
             Buy Tickets
           </button>
         </div>
@@ -118,10 +180,8 @@ const EventDetailPage = () => {
       {/* --- Main Content Area --- */}
       <div className="container mx-auto max-w-7xl px-4 py-8">
         
-        {/* --- Top Section (Banner & Info Box) --- */}
         <div className="relative mb-8 grid grid-cols-1 gap-8 lg:grid-cols-3">
-          
-          {/* Left Side: Banner */}
+          {/* Banner */}
           <div className="overflow-hidden rounded-lg lg:col-span-2">
             <img 
               src={mockEvent.bannerUrl} 
@@ -131,31 +191,41 @@ const EventDetailPage = () => {
             />
           </div>
 
-          {/* Right Side: Sticky Info Box */}
+          {/* Sticky Info Box */}
           <div className="relative lg:col-span-1">
-            <div className="sticky top-28 rounded-lg bg-gray-800 p-6 shadow-lg">
+            <div className="sticky top-32 rounded-lg bg-gray-800 p-6 shadow-lg">
               <h2 className="text-2xl font-bold">{mockEvent.title}</h2>
-              <div className="mt-4 flex items-center space-x-2 text-gray-300">
-                <Calendar className="h-5 w-5 text-blue-400" />
-                <span>{new Date(mockEvent.startDate).toLocaleDateString()} - {new Date(mockEvent.endDate).toLocaleDateString()}</span>
-              </div>
-              <div className="mt-2 flex items-center space-x-2 text-gray-300">
-                <Clock className="h-5 w-5 text-blue-400" />
-                <span>{new Date(mockEvent.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-              </div>
-              <div className="mt-2 flex items-center space-x-2 text-gray-300">
-                <MapPin className="h-5 w-5 text-blue-400" />
-                <span>{mockEvent.address || "Location TBD"}</span>
+              
+              <div className="mt-6 space-y-4">
+                {/* Date */}
+                <div className="flex items-center space-x-3 text-gray-300">
+                  <Calendar className="h-5 w-5 text-blue-400" />
+                  <div>
+                    <span className="block font-medium text-white">Date</span>
+                    <span>{new Date(mockEvent.startDate).toLocaleDateString()} - {new Date(mockEvent.endDate).toLocaleDateString()}</span>
+                  </div>
+                </div>
+                
+                {/* Time */}
+                <div className="flex items-center space-x-3 text-gray-300">
+                  <Clock className="h-5 w-5 text-blue-400" />
+                   <div>
+                    <span className="block font-medium text-white">Time</span>
+                    <span>{new Date(mockEvent.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  </div>
+                </div>
+
+                {/* Full Address Display */}
+                <div className="border-t border-gray-700 pt-4">
+                   <AddressDisplay addressString={mockEvent.address} compact={false} />
+                </div>
               </div>
 
               <div className="my-6 border-t border-gray-600"></div>
 
               <p className="text-sm text-gray-400">Starting from</p>
               <p className="text-3xl font-bold text-green-400">
-                {/* Find lowest ticket price */}
-                {tickets && tickets.pageContent.length > 0 
-                  ? `${tickets.pageContent.reduce((min, t) => t.unitPrice < min ? t.unitPrice : min, tickets.pageContent[0].unitPrice).toLocaleString()} đ`
-                  : "TBD"}
+                {displayPrice}
               </p>
 
               <button className="mt-6 w-full rounded-full bg-green-600 py-3 text-lg font-semibold text-white transition-colors hover:bg-green-700">
@@ -165,19 +235,16 @@ const EventDetailPage = () => {
           </div>
         </div>
 
-        {/* --- Bottom Section (Details, Tickets, Ads) --- */}
+        {/* --- Bottom Sections (Unchanged) --- */}
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-          
-          {/* Main Column: Details & Tickets */}
           <div className="lg:col-span-2">
-            
             {/* Ticket List */}
             <div id="tickets" className="mb-12 rounded-lg bg-gray-800 shadow-lg">
               <h3 className="border-b border-gray-700 p-6 text-xl font-semibold">Ticket Information</h3>
               <div className="flex flex-col">
                 {isLoadingTickets && <p className="p-6 text-gray-400">Loading tickets...</p>}
                 {isErrorTickets && <p className="p-6 text-red-400">Error loading tickets: {errorTickets.message}</p>}
-                {tickets && tickets.pageContent.map((ticket) => (
+                {tickets && tickets?.pageContent?.map((ticket) => (
                   <div key={ticket.id} className="flex flex-col items-center justify-between border-b border-gray-700 p-4 last:border-b-0 md:flex-row">
                     <div className="mb-4 w-full md:mb-0 md:w-auto">
                       <h4 className="text-lg font-semibold text-white">{ticket.type}</h4>
@@ -199,10 +266,7 @@ const EventDetailPage = () => {
             {/* Introduction / PDF Embed */}
             <div id="introduction" className="mb-12 rounded-lg bg-gray-800 p-6 shadow-lg">
               <h3 className="mb-4 text-xl font-semibold">Introduction</h3>
-              <p className="mb-4 text-gray-300">
-                {mockEvent.orgInfo}
-              </p>
-              {/* PDF Iframe as requested */}
+              <p className="mb-4 text-gray-300">{mockEvent.orgInfo}</p>
               <div className="h-[800px] w-full overflow-hidden rounded-lg border border-gray-700">
                 <iframe 
                   src={mockEvent.pdfInfoUrl} 
@@ -234,12 +298,11 @@ const EventDetailPage = () => {
                 </div>
               </div>
             </div>
-
           </div>
 
           {/* Sidebar Column: Ad */}
           <div className="relative lg:col-span-1">
-            <div className="sticky top-28">
+            <div className="sticky top-32">
               <h3 className="mb-4 text-xl font-semibold">Sponsors</h3>
               <div className="overflow-hidden rounded-lg shadow-lg">
                 <img 

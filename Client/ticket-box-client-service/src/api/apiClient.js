@@ -53,7 +53,7 @@ apiClient.interceptors.response.use(
  * @param {Promise} request - The Axios request promise.
  * @returns {Promise<any>} - The `data` field from the API response.
  */
-export const handleApiResponse = async (request) => {
+export const handleApiResponse = async(request) => {
   try {
     const response = await request;
     // `data` here is the Axios response data, which is our backend's ApiResponse object
@@ -62,11 +62,9 @@ export const handleApiResponse = async (request) => {
     if (apiResponse.code == 200 && apiResponse.data !== undefined) {
       return apiResponse.data;
     } else {
-      // Handle business logic errors (e.g., code: 1001, message: "Username taken")
       throw new Error(apiResponse.message || 'An API error occurred.');
     }
   } catch (error) {
-    // Handle network/interceptor errors
     throw error;
   }
 };

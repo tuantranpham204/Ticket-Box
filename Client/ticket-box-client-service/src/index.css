@@ -1,15 +1,10 @@
 @import "tailwindcss";
-/* Import Tailwind's base styles, components, and utilities */
-@import "tailwindcss/preflight";
-@tailwind utilities;
 
-/* Base styles to match the dark theme from the screenshots */
 @layer base {
   body {
     @apply bg-gray-900 text-gray-100 antialiased;
   }
 
-  /* Custom scrollbar for a more modern look (optional) */
   ::-webkit-scrollbar {
     @apply w-2;
   }

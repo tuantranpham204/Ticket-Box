@@ -1,6 +1,8 @@
 import React from 'react';
 
 export default function Footer(){
+  
+
   return (
     <footer className="bg-gray-900 p-8 text-gray-300 md:p-16">
       <div className="container mx-auto max-w-7xl">
