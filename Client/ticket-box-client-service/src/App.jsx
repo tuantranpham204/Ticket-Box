@@ -1,24 +1,18 @@
-import React, { Suspense } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { Toaster } from 'sonner';
-import Layout from './components/layout';
-import AuthModal from './components/authModal';
+import React, { Suspense } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "sonner";
+import Layout from "./components/layout";
+import AuthModal from "./components/authModal";
 
 // --- Auth Stores ---
-// Make sure this path matches your store file
-// (e.g., './store/authStore.js' or './store/authStore.jsx')
-import { useAuthStore } from './store/useAuthStore'; 
+import { useAuthStore } from "./store/useAuthStore";
 
 // --- Page Components ---
-// We lazy-load pages to improve initial load time
-const HomePage = React.lazy(() => import('./pages/homePage'));
+const HomePage = React.lazy(() => import("./pages/homePage"));
+const EventDetailPage = React.lazy(() => import("./pages/eventDetailPage"));
+const EventCreationPage = React.lazy(() => import("./pages/eventCreationPage"))
 
-// Add other pages here as you build them
-const EventDetailPage = React.lazy(() => import('./pages/eventDetailPage'));
-// const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
-
-// Create a query client
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -34,7 +28,7 @@ export default function App() {
       <BrowserRouter>
         {/* AuthModal is placed outside routes so it can overlay any page */}
         <AuthModal />
-        
+
         {/* Toaster provides notifications for login success/failure */}
         <Toaster richColors position="top-right" />
 
@@ -42,12 +36,20 @@ export default function App() {
           <Routes>
             {/* All routes are nested under the main Layout (Header, etc.) */}
             <Route path="/" element={<Layout />}>
-              
               {/* --- Public Routes --- */}
               <Route index element={<HomePage />} />
               <Route path="event/:eventId" element={<EventDetailPage />} />
-             
-              
+              <Route
+                path="/create-event"
+                element={
+                  <RoleBasedRoute
+                    roles={["ROLE_USER", "ROLE_ADMIN", "ROLE_APPROVER"]}
+                  >
+                    <EventCreationPage />
+                  </RoleBasedRoute>
+                }
+              />
+
               {/* --- Protected Routes (Example) --- */}
               {/* Uncomment these as you build the components */}
               {/* <Route path="/my-tickets" element={
@@ -64,7 +66,6 @@ export default function App() {
               {/* --- Catch-all (404) Route --- */}
               {/* Any path not matched above will redirect to the home page */}
               <Route path="*" element={<Navigate to="/" replace />} />
-              
             </Route>
           </Routes>
         </Suspense>
@@ -91,18 +92,19 @@ const LoadingSpinner = () => (
  */
 const RoleBasedRoute = ({ children, roles }) => {
   const { user } = useAuthStore();
-  
+
   // Check if user is logged in
   const isAuth = !!user;
 
   // Check if user has one of the required roles
   // We assume the `user` object has a `roles` array like:
   // user.roles = [{ name: 'ROLE_USER' }, { name: 'ROLE_ADMIN' }]
-  const hasRole = isAuth && user.roles.some(role => roles.includes(role.name));
+  const hasRole =
+    isAuth && user.roles.some((role) => roles.includes(role.name));
 
   if (!isAuth || !hasRole) {
     // Redirect to home page if not authenticated or authorized
-    console.warn('Unauthorized access attempt to a protected route.');
+    console.warn("Unauthorized access attempt to a protected route.");
     return <Navigate to="/" replace />;
   }
 

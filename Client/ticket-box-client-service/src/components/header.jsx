@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Search, Ticket, User, PlusCircle } from 'lucide-react';
-import { useAuthStore } from '../store/useAuthStore';
-import { useUIStore } from '../store/useUiStore';
+import React, { useState } from "react";
+import { Search, Ticket, User, PlusCircle } from "lucide-react";
+import { useAuthStore } from "../store/useAuthStore";
+import { useUIStore } from "../store/useUiStore";
+import { Link } from 'react-router-dom';
 
 export default function Header() {
   const { user, logout } = useAuthStore();
@@ -15,10 +16,30 @@ export default function Header() {
             ticketbox
           </a>
           <nav className="hidden items-center gap-6 md:flex">
-            <a href="#" className="text-sm font-medium text-gray-300 hover:text-white">Music</a>
-            <a href="#" className="text-sm font-medium text-gray-300 hover:text-white">Stage & Art</a>
-            <a href="#" className="text-sm font-medium text-gray-300 hover:text-white">Sports</a>
-            <a href="#" className="text-sm font-medium text-gray-300 hover:text-white">Other</a>
+            <a
+              href="#"
+              className="text-sm font-medium text-gray-300 hover:text-white"
+            >
+              Music
+            </a>
+            <a
+              href="#"
+              className="text-sm font-medium text-gray-300 hover:text-white"
+            >
+              Stage & Art
+            </a>
+            <a
+              href="#"
+              className="text-sm font-medium text-gray-300 hover:text-white"
+            >
+              Sports
+            </a>
+            <a
+              href="#"
+              className="text-sm font-medium text-gray-300 hover:text-white"
+            >
+              Other
+            </a>
           </nav>
         </div>
 
@@ -29,7 +50,10 @@ export default function Header() {
               placeholder="Search events..."
               className="w-full rounded-full bg-gray-800 py-2.5 pl-10 pr-20 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            <Search id="searchbar" className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400"   />
+            <Search
+              id="searchbar"
+              className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400"
+            />
             <button className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-full bg-gray-700 px-4 py-1.5 text-sm font-semibold hover:bg-gray-600">
               Search
             </button>
@@ -37,18 +61,27 @@ export default function Header() {
         </div>
 
         <div className="flex items-center gap-4">
-          <button className="hidden items-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold hover:bg-blue-700 md:flex">
+          <Link
+            to="/create-event"
+            className="hidden items-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold hover:bg-blue-700 md:flex"
+          >
             <PlusCircle className="h-4 w-4" />
             Create Event
-          </button>
-          
+          </Link>
+
           {user ? (
             <>
-              <a href="/my-tickets" className="flex items-center gap-2 text-sm font-medium hover:text-blue-400">
+              <a
+                href="/my-tickets"
+                className="flex items-center gap-2 text-sm font-medium hover:text-blue-400"
+              >
                 <Ticket className="h-5 w-5" />
                 My Tickets
               </a>
-              <button onClick={logout} className="flex items-center gap-2 text-sm font-medium hover:text-blue-400">
+              <button
+                onClick={logout}
+                className="flex items-center gap-2 text-sm font-medium hover:text-blue-400"
+              >
                 <User className="h-5 w-5" />
                 Logout
               </button>
@@ -56,13 +89,13 @@ export default function Header() {
           ) : (
             <>
               <button
-                onClick={() => openAuthModal('login')}
+                onClick={() => openAuthModal("login")}
                 className="text-sm font-medium hover:text-blue-400"
               >
                 Login
               </button>
               <button
-                onClick={() => openAuthModal('register')}
+                onClick={() => openAuthModal("register")}
                 className="rounded-full bg-gray-700 px-4 py-2 text-sm font-semibold hover:bg-gray-600"
               >
                 Register
@@ -74,4 +107,3 @@ export default function Header() {
     </header>
   );
 }
-

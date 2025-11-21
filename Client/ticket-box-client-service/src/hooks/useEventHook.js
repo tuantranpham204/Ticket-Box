@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import apiClient, { handleApiResponse } from '../api/apiClient';
-
+import { useAuthStore } from '../store/useAuthStore'
 // API Functions 
 
 const getEventById = async(eventId) => {
@@ -19,11 +19,29 @@ const getEventsByCategory = async(categoryId, page = 1, pageSize = 10) => {
     params: {
       pageNo: page,
       pageSize: pageSize,
-      // sortBy: 'startDate' // We can add sorting later
+      // sortBy: 'startDate' // We can add sorting later  
     }
   }));
   // This will return the CustomPage<EventResponse> object
 };
+
+const createEvent = async({ creatorUserId, eventData }) => {
+  // Sends JSON data to create the event entity
+  return await handleApiResponse(
+    apiClient.post(`/events/create/${creatorUserId}`, eventData)
+  );
+};
+const uploadEventFiles = async({ eventId, formData }) => {
+  // Sends files (images, PDFs) to the specific upload endpoint
+  return await handleApiResponse(
+    apiClient.post(`/events/upload/${eventId}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+  );
+};
+
 
 
 // React Query Hooks 
@@ -58,7 +76,6 @@ export const useSearchEventsByParams = (searchParams) => {
     staleTime: 1000 * 60
   })
 }
-
 export const useEventsByCategory = (categoryId) => {
   return useQuery({
     queryKey: ['events', 'category', categoryId],
@@ -68,10 +85,39 @@ export const useEventsByCategory = (categoryId) => {
   });
 };
 
+export const useCreateEventMutation = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuthStore.getState();
 
+  return useMutation({
+    mutationFn: async ({ textData, formData }) => {
+      // Step 1: Create the event structure (Text fields)
+      const eventResponse = await createEvent({ 
+        userId: user?.id, 
+        eventData: textData 
+      });
 
+      if (!eventResponse?.id) {
+        throw new Error("Failed to create event: No ID returned.");
+      }
 
+      const eventId = eventResponse.id;
 
-// --- TODO: Add Mutations (Create, Update, Approve) ---
-// We will add `useMutation` hooks here for creating, updating,
-// and approving events, following the "Golden Rule".
+      // Step 2: Upload files if any exist in the formData
+      // We check if the formData has any entries before sending
+      if (formData && Array.from(formData.entries()).length > 0) {
+        await uploadEventFiles({
+          eventId: eventId,
+          formData: formData
+        });
+      }
+
+      // Return the initial event response (or fetch the updated one if needed)
+      return eventResponse;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['events']);
+    },
+  });   
+};
+
