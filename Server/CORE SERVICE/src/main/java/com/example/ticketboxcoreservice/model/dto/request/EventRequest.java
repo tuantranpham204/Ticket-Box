@@ -12,12 +12,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class EventRequest {
-    private ImageRequest img;
-    private ImageRequest banner;
     private String name;
     private Boolean online;
     private String address;
-    private String info;
     private CategoryRequest category;
     private String orgName;
     private String orgInfo;

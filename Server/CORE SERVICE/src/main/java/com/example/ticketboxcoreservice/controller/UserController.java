@@ -1,6 +1,7 @@
 package com.example.ticketboxcoreservice.controller;
 
 
+import com.example.ticketboxcoreservice.model.dto.request.ImageRequest;
 import com.example.ticketboxcoreservice.model.dto.request.TicketRequest;
 import com.example.ticketboxcoreservice.model.dto.request.UserRequest;
 import com.example.ticketboxcoreservice.model.dto.response.ApiResponse;
@@ -60,6 +61,14 @@ public class UserController {
             @RequestBody @Valid UserRequest userRequest
     ) {
         ApiResponse response = ApiResponse.succeed(userService.updateUser(userId, userRequest));
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+    @Operation(summary = "update user avatar")
+    @PutMapping("/avatar/{userId}")
+    public ResponseEntity<ApiResponse> updateUserAvatar(
+            @PathVariable("userId") Long userId,
+            @RequestBody @Valid ImageRequest request) {
+        ApiResponse response = ApiResponse.succeed(userService.updateAvatarByUserId(userId, request));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

@@ -74,7 +74,7 @@ public class TicketController {
             @PathVariable("eventId") Long eventId,
             @RequestParam(value = "pageNo", defaultValue = "1", required = false) int pageNo,
             @RequestParam(value = "pageSize", defaultValue = "10", required = false) int pageSize,
-            @RequestParam(value = "sortBy", defaultValue = "ticketId", required = false) String sortBy) {
+            @RequestParam(value = "sortBy", defaultValue = "id", required = false) String sortBy) {
         Pageable pageable = PageRequest.of(pageNo - 1, pageSize, Sort.by(sortBy).ascending());
         ApiResponse response = ApiResponse.succeed(ticketService.getTicketsByEventId(eventId, pageable));
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -85,6 +85,15 @@ public class TicketController {
     public ResponseEntity<ApiResponse> getTicketByTicketId(
             @PathVariable("ticketId") Long ticketId) {
         ApiResponse response = ApiResponse.succeed(ticketService.getTicketByTicketId(ticketId));
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Operation(summary = "get tickets lowest price by event id")
+    @GetMapping("/lowest-price/{eventId}")
+    public ResponseEntity<ApiResponse> getLowestTicketPriceByEventId(
+            @PathVariable("eventId") Long eventId
+    ) {
+        ApiResponse response = ApiResponse.succeed(ticketService.getLowestTicketPriceByEventId(eventId));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

@@ -2,10 +2,13 @@ package com.example.ticketboxcoreservice.repository;
 
 import com.example.ticketboxcoreservice.model.dto.response.EventResponse;
 import com.example.ticketboxcoreservice.model.entity.Event;
+import com.example.ticketboxcoreservice.model.entity.Pdf;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+
+import java.util.List;
 
 public interface EventRepository extends JpaRepository<Event,Long> {
     @Query("SELECT e FROM Event e JOIN e.categories c where c.id=:categoryId")
@@ -14,4 +17,7 @@ public interface EventRepository extends JpaRepository<Event,Long> {
     Page<Event> findByHostId(Long hostId, Pageable pageable);
     @Query("SELECT e FROM Event e JOIN e.approver u where u.id=:approverId")
     Page<Event> findByApproverId(Long approverId, Pageable pageable);
+    @Query("SELECT e FROM Event e WHERE e.name LIKE CONCAT('%', :params, '%') OR e.address LIKE CONCAT('%', :params, '%') OR e.orgName LIKE CONCAT('%', :params, '%')")
+    List<Event> search(String params);
+
 }

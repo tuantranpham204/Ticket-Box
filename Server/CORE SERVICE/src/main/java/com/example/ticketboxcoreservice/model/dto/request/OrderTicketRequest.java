@@ -12,4 +12,5 @@ public class OrderTicketRequest {
     private String ownerName;
     private Relationship relationship;
     private Long ticketId;
+    private Long subQuantity;
 }

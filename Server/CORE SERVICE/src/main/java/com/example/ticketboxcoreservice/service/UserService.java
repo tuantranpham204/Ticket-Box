@@ -56,13 +56,17 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         return modelMapper.map(userRepository.save(user),UserResponse.class);
     }
-    public UserResponse updateAvatarByUserId(Long id, ImageRequest request) throws IOException {
+    public UserResponse updateAvatarByUserId(Long id, ImageRequest request) {
         User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
         Long avatarImgId = user.getAvatar().getId();
         Image updatedAvatar = new Image();
-        if (avatarImgId == Constants.DEFAULT_AVATAR_IMG_ID) {
-            updatedAvatar = modelMapper.map(imageService.uploadImage(request), Image.class);
-        } else  updatedAvatar = modelMapper.map(imageService.updateImageByImageId(avatarImgId, request), Image.class);
+        try {
+            if (avatarImgId == Constants.DEFAULT_AVATAR_IMG_ID) {
+                updatedAvatar = modelMapper.map(imageService.uploadImage(request), Image.class);
+            } else  updatedAvatar = modelMapper.map(imageService.updateImageByImageId(avatarImgId, request), Image.class);
+        } catch (IOException e) {
+            throw new IllegalArgumentException(e.getMessage());
+        }
         user.setAvatar(updatedAvatar);
         return modelMapper.map(userRepository.save(user), UserResponse.class);
     }

@@ -29,6 +29,8 @@ public class Ticket {
     private Long capacity;
     private Long sold;
     private Integer status;
+    private Long maxQtyPerOrder;
+    private Long minQtyPerOrder;
     private LocalDateTime createDate;
     private LocalDateTime updateDate;
     @ManyToOne(fetch = FetchType.LAZY,cascade = {CascadeType.PERSIST,CascadeType.MERGE,CascadeType.DETACH,CascadeType.REFRESH})
@@ -65,4 +67,6 @@ public class Ticket {
         if (status == Constants.TICKET_STATUS_PENDING) status = Constants.TICKET_STATUS_DECLINED;
         else throw new AppException(ErrorCode.ONLY_PENDING_TICKET_IS_UPDATABLE);
     }
+
+
 }

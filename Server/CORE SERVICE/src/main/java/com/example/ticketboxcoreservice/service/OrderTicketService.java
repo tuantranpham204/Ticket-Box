@@ -16,6 +16,7 @@ import com.example.ticketboxcoreservice.repository.OrderRepository;
 import com.example.ticketboxcoreservice.repository.OrderTicketRepository;
 import com.example.ticketboxcoreservice.repository.TicketRepository;
 import lombok.RequiredArgsConstructor;
+import org.aspectj.weaver.ast.Or;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -46,10 +47,30 @@ public class OrderTicketService {
         orderTicket.setTicket(ticketRepository.findById(orderTicketRequest.getTicketId()).orElseThrow(
                 () -> new ResourceNotFoundException("ticket", "ticket id", orderTicketRequest.getTicketId())
         ));
+        orderTicket.validateSubQuantity();
         orderTicket.setStatus(Constants.ORDER_TICKET_STATUS_INACTIVE);
         orderTicket.setToken(generateOrderTicketToken(orderTicket));
         return modelMapper.map(orderTicketRepository.save(orderTicket), OrderTicketResponse.class);
     }
+    public OrderTicketResponse updateOrderTicket(Long userId, Long orderTicketId, OrderTicketRequest orderTicketRequest) {
+        Order cart = getCartByUserIdFunction(userId);
+        boolean isOrderTicketInCart = false;
+        for (OrderTicket orderTicket : cart.getOrderTickets()) {
+            if (orderTicketId.equals(orderTicket.getId())) isOrderTicketInCart = true;
+        }
+        if (!isOrderTicketInCart) {throw new  AppException(ErrorCode.ORDER_TICKET_NOT_INSIDE_CART);}
+        OrderTicket orderTicket = orderTicketRepository.findById(orderTicketId).orElseThrow(
+                () -> new ResourceNotFoundException("ticket", "ticket id", orderTicketId)
+        );
+        if (!orderTicket.getStatus().equals(Constants.ORDER_TICKET_STATUS_INACTIVE)) {
+            throw new  AppException(ErrorCode.ONLY_INACTIVE_ORDER_TICKETS_IS_UPDATABLE_AND_REMOVABLE);
+        }
+        orderTicket.validateSubQuantity();
+        OrderTicket newOrderTicket = modelMapper.map(orderTicket, OrderTicket.class);
+        newOrderTicket.setId(orderTicket.getId());
+        return  modelMapper.map(orderTicketRepository.save(newOrderTicket), OrderTicketResponse.class);
+    }
+
     public MessageResponse deleteOrderTicket(Long orderTicketId) {
         if (orderTicketRepository.getOrderTicketStatusByOrderTicketId(orderTicketId) != Constants.ORDER_TICKET_STATUS_INACTIVE) {
             throw new AppException(ErrorCode.ONLY_INACTIVE_ORDER_TICKETS_IS_UPDATABLE_AND_REMOVABLE);

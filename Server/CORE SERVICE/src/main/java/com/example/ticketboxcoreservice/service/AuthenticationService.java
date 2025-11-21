@@ -94,7 +94,7 @@ public class AuthenticationService {
         user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
         Set<Role> roles = new HashSet<>();
         Role role = roleRepository.findByName("ROLE_USER").orElseThrow(
-                ()->new ResourceNotFoundException("role", "role's name","ROLE_CUSTOMER"));
+                ()->new ResourceNotFoundException("role", "role's name","ROLE_USER"));
         roles.add(role);
         user.setRoles(roles);
 

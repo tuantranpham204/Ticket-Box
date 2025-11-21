@@ -10,6 +10,7 @@ import com.example.ticketboxcoreservice.service.JwtService;
 import com.example.ticketboxcoreservice.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -25,6 +26,18 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Authentication", description = "Authentication API")
 public class AuthenticationController {
     private final AuthenticationService authenticationService;
+
+    @Operation(summary = "Refresh Token", description = "Refresh access token API")
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse> refreshToken(HttpServletRequest request) {
+        final String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return new ResponseEntity<>(ApiResponse.error(401, "Refresh token is missing or invalid"), HttpStatus.UNAUTHORIZED);
+        }
+        final String refreshToken = authHeader.substring(7);
+        ApiResponse response = ApiResponse.succeed(authenticationService.refreshToken(refreshToken));
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 
     @Operation(summary = "Login", description = "Login API")
     @PostMapping("/login")

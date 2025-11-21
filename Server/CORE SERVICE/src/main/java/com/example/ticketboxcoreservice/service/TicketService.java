@@ -5,10 +5,7 @@ import com.example.ticketboxcoreservice.enumf.ErrorCode;
 import com.example.ticketboxcoreservice.exception.AppException;
 import com.example.ticketboxcoreservice.exception.ResourceNotFoundException;
 import com.example.ticketboxcoreservice.model.dto.request.TicketRequest;
-import com.example.ticketboxcoreservice.model.dto.response.CustomPage;
-import com.example.ticketboxcoreservice.model.dto.response.EventResponse;
-import com.example.ticketboxcoreservice.model.dto.response.MessageResponse;
-import com.example.ticketboxcoreservice.model.dto.response.TicketResponse;
+import com.example.ticketboxcoreservice.model.dto.response.*;
 import com.example.ticketboxcoreservice.model.entity.Event;
 import com.example.ticketboxcoreservice.model.entity.Ticket;
 import com.example.ticketboxcoreservice.repository.EventRepository;
@@ -99,6 +96,12 @@ public class TicketService {
                         ticket -> modelMapper.map(ticket, TicketResponse.class)
                 ).collect(Collectors.toList())).build();
     }
+    @Transactional
+    public EventLowestPrice getLowestTicketPriceByEventId(Long eventId) {
+        Double lowestPrice = ticketRepository.getLowestTicketPriceByEventId(eventId).get(0);
+        return EventLowestPrice.builder().lowestPrice(lowestPrice).build();
+    }
+
 
     private Ticket mapNotNullValuesFromTicketReq(TicketRequest request, Ticket ticket) {
         // --- Map simple fields using Optional for a clean, null-safe check ---

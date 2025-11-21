@@ -7,6 +7,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class PdfHtmlResponse {
-    private String html;
+public class PdfResponse {
+    private Long id;
+    private String url;
 }

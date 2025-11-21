@@ -16,6 +16,4 @@ public interface OrderTicketRepository extends JpaRepository<OrderTicket,Long> {
 
     @Query("SELECT ot FROM OrderTicket ot WHERE ot.order.id=:orderId")
     Page<OrderTicket> findByOrderId(Long orderId, Pageable pageable);
-
-    Long order(Order order);
 }

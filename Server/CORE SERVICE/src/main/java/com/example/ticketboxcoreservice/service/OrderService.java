@@ -32,6 +32,7 @@ public class OrderService {
     @Transactional
     public OrderResponse getCartByUserId(Long userId) {
         List<Order> orders = orderRepository.findOrderByUserIdAndPurchasedAsList(userId, Constants.ORDER_STATUS_NOT_PURCHASED);
+        orders.forEach(Order::recalculate);
         if (orders.size() != 1) throw new AppException(ErrorCode.INVALID_NUMBER_OF_CARTS);
         Order cart = orders.get(0);
         return modelMapper.map(orderRepository.save(cart), OrderResponse.class);
@@ -39,6 +40,7 @@ public class OrderService {
     @Transactional
     public MessageResponse purchaseCartByUserId(Long userId) {
         Order cart = getCartByUserIdFunction(userId);
+        cart.recalculate();
         cart.setStatus(Constants.ORDER_STATUS_PURCHASED);
         cart.setPurchaseDate(LocalDateTime.now());
         for (OrderTicket orderTicket : cart.getOrderTickets()) {

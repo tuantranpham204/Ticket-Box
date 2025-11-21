@@ -5,23 +5,23 @@ import com.example.ticketboxcoreservice.enumf.ErrorCode;
 import com.example.ticketboxcoreservice.exception.AppException;
 import com.example.ticketboxcoreservice.exception.ResourceNotFoundException;
 import com.example.ticketboxcoreservice.model.dto.request.EventRequest;
-import com.example.ticketboxcoreservice.model.dto.response.CustomPage;
-import com.example.ticketboxcoreservice.model.dto.response.EventResponse;
-import com.example.ticketboxcoreservice.model.dto.response.MessageResponse;
-import com.example.ticketboxcoreservice.model.entity.Event;
-import com.example.ticketboxcoreservice.model.entity.Image;
-import com.example.ticketboxcoreservice.model.entity.User;
-import com.example.ticketboxcoreservice.repository.EventRepository;
-import com.example.ticketboxcoreservice.repository.UserRepository;
+import com.example.ticketboxcoreservice.model.dto.request.ImageRequest;
+import com.example.ticketboxcoreservice.model.dto.request.PdfRequest;
+import com.example.ticketboxcoreservice.model.dto.response.*;
+import com.example.ticketboxcoreservice.model.entity.*;
+import com.example.ticketboxcoreservice.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -30,20 +30,29 @@ import java.util.stream.Collectors;
 public class EventService {
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
+    private final PdfRepository pdfRepository;
+    private final CategoryRepository categoryRepository;
     private final UserService userService;
+    private final PdfService pdfService;
     private final ImageService imageService;
     private final ModelMapper modelMapper;
 
     //get userId from session storage
     @Transactional
     public EventResponse createEvent(Long creatorUserId, EventRequest eventRequest)  {
-        Event event = mapNotNullValuesFromEventReq(eventRequest, new Event());
+        Event event = modelMapper.map(eventRequest, Event.class);
+
         User host = userRepository.findById(creatorUserId).orElseThrow(
                 () -> new ResourceNotFoundException("user", "user id", creatorUserId));
         event.setHost(host);
         event.setStatus(Constants.EVENT_STATUS_PENDING);
         event.setCreateDate(LocalDateTime.now());
         event.setUpdateDate(LocalDateTime.now());
+        event = eventRepository.save(event);
+        Category category = categoryRepository.findById(eventRequest.getCategory().getId()).orElseThrow(
+                () -> new ResourceNotFoundException("category", "category id", eventRequest.getCategory().getId())
+        );
+        categoryRepository.addCategoryToEvents(category.getId(), event.getId());
         return modelMapper.map(eventRepository.save(event), EventResponse.class);
     }
     @Transactional
@@ -128,8 +137,74 @@ public class EventService {
                 ).collect(Collectors.toList()))
                 .build();
     }
+    @Transactional
+    public PdfResponse getEventContractByEventId(Long eventId) {
+        Pdf contract = pdfRepository.findById(eventId).orElseThrow(
+                () -> new ResourceNotFoundException("event", "event id", eventId)
+        );
+        return modelMapper.map(contract, PdfResponse.class);
+    }
+    @Transactional
+    public PdfDownloadResponse getDownloadableEventContractByEventId(Long eventId) {
+        Pdf contract = pdfRepository.findById(eventId).orElseThrow(
+                () -> new ResourceNotFoundException("event", "event id", eventId)
+        );
+        return pdfService.getPdfDownloadable(contract);
+    }
 
+    @Transactional
+    public EventResponse updateEventMultipartFiles(Long eventId, ImageRequest img, ImageRequest banner, PdfRequest info, PdfRequest contract) {
+        Event event = eventRepository.findById(eventId).orElseThrow(
+                () -> new ResourceNotFoundException("event", "event id", eventId)
+        );
+        event.setUpdateDate(LocalDateTime.now());
+        try {
+            Image eventImg = event.getImg();
+            Image eventBanner = event.getBanner();
+            Pdf eventInfo = event.getInfo();
+            Pdf eventContract = event.getContract();
+            // Update Image
+            if (eventImg != null) {
+                event.setImg(modelMapper.map(imageService.replaceImage(eventImg, img.getImage()), Image.class));
+            } else {
+                event.setImg(modelMapper.map(imageService.uploadImage(img), Image.class));
+            }
+            // Update Banner
+            if (eventBanner != null) {
+                event.setBanner(modelMapper.map(imageService.replaceImage(eventBanner, banner.getImage()), Image.class));
+            } else {
+                event.setBanner(modelMapper.map(imageService.uploadImage(banner), Image.class));
+            }
+            if (eventInfo != null) {
+                event.setInfo(modelMapper.map(pdfService.replacePdf(eventInfo, info.getFile()), Pdf.class));
+            } else {
+                event.setInfo(modelMapper.map(pdfService.uploadPdf(info), Pdf.class));
+            }
+            if (eventContract != null) {
+                event.setContract(modelMapper.map(pdfService.replacePdf(eventContract, contract.getFile()), Pdf.class));
+            } else {
+                event.setContract(modelMapper.map(pdfService.uploadPdf(contract), Pdf.class));
+            }
+        } catch (IOException e) {
+            throw new IllegalArgumentException(e.getMessage());
+        }
+        return modelMapper.map(eventRepository.save(event), EventResponse.class);
+    }
 
+    @Transactional
+    public List<EventResponse> search(String params) {
+        return eventRepository.search(params).stream()
+                .map(event -> modelMapper.map(event, EventResponse.class))
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public List<EventResponse> getEventsByEventIds(List<Long> eventIds) {
+        List<Event> events = eventIds.stream().map(eventId -> eventRepository.findById(eventId).orElseThrow(
+                () -> new ResourceNotFoundException("event", "event id", eventId)
+        )).collect(Collectors.toList());
+        return events.stream().map(event -> modelMapper.map(event, EventResponse.class)).collect(Collectors.toList());
+    }
 
     private Event mapNotNullValuesFromEventReq(EventRequest request, Event event) {
         // == Simple Primitive/String Fields ==
@@ -140,23 +215,13 @@ public class EventService {
         Optional.ofNullable(request.getOrgInfo()).ifPresent(event::setOrgInfo);
         Optional.ofNullable(request.getStartDate()).ifPresent(event::setStartDate);
         Optional.ofNullable(request.getEndDate()).ifPresent(event::setEndDate);
-        Optional.ofNullable(request.getInfo()).ifPresent(event::setInfo);
-
-        try {
-            // Update Image
-            if (request.getImg() != null) {
-                event.setImg(modelMapper.map(imageService.uploadImage(request.getImg()), Image.class));
-            }
-            // Update Banner
-            if (request.getBanner() != null) {
-                event.setBanner(modelMapper.map(imageService.uploadImage(request.getBanner()), Image.class));
-            }
-        } catch (IOException e) {
-
-            //
-        }
-
+        Category category = categoryRepository.findById(request.getCategory().getId()).orElseThrow(
+                () -> new ResourceNotFoundException("category", "category id", request.getCategory().getId())
+        );
+        categoryRepository.addCategoryToEvents(category.getId(), event.getId());
         return event;
     }
+
+
 
 }

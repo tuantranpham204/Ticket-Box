@@ -36,6 +36,10 @@ public enum ErrorCode {
     ORDER_TICKET_EXPIRED(400, "Order ticket expired.", HttpStatus.BAD_REQUEST),
     ORDER_TICKET_USED(400, "Order ticket used.", HttpStatus.BAD_REQUEST),
     ORDER_TICKET_UNMATCHED(400, "Validation failed: Scanned token does not match database token.", HttpStatus.BAD_REQUEST),
+    ORDER_TICKET_QUANTITY_INVALID(400, "Order ticket quantity cannot exceeds ticket maximum quantity nor be under the minimum one.", HttpStatus.BAD_REQUEST),
+    ORDER_TICKET_NOT_INSIDE_CART(400, "Cart does not contain the given order ticket.", HttpStatus.BAD_REQUEST),
+
+    ONLY_PDF_ALLOWED(400, "Only PDF files are allowed!", HttpStatus.BAD_REQUEST),
     ;
     private int code;
     private String message;

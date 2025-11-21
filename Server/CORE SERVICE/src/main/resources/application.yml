@@ -3,6 +3,10 @@ app:
   jwt-expiration-milliseconds: '3600000'
   order-ticket-jwt-secret: fe7276816fef85a611a8d9864c9679e491729cf34601a31d43aa30f866eb515d
 spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
   jpa:
     properties:
       hibernate:

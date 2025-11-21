@@ -34,6 +34,11 @@ public class ImageService {
         image.setUrl(generateMediaLink(request.getImage()));
         return modelMapper.map(imageRepository.save(image), ImageResponse.class);
     }
+    public ImageResponse replaceImage(Image image, MultipartFile file) throws IOException {
+        image.setUrl(generateMediaLink(file));
+        return modelMapper.map(imageRepository.save(image), ImageResponse.class);
+    }
+
     public ImageResponse getImageByImageId(Long id) {
         Image image = imageRepository.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException("image", "image id", id)

@@ -1,6 +1,5 @@
 package com.example.ticketboxcoreservice.model.dto.response;
 
-import jakarta.persistence.Column;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -22,4 +21,7 @@ public class EventResponse {
     private LocalDateTime endDate;
     private LocalDateTime createDate;
     private LocalDateTime updateDate;
+    private PdfResponse info;
+    private ImageResponse img;
+    private ImageResponse banner;
 }

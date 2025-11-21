@@ -30,4 +30,13 @@ public class Order{
     @JoinColumn(name = "buyer_id", referencedColumnName = "id")
     private User buyer;
 
+    public void recalculate() {
+        totalPrice = 0d;
+        quantity = 0L;
+        for (OrderTicket orderTicket : orderTickets) {
+            quantity += orderTicket.getSubQuantity();
+            totalPrice += (double)orderTicket.getSubQuantity() * orderTicket.getTicket().getUnitPrice();
+        }
+    }
+
 }

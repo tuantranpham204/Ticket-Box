@@ -30,16 +30,26 @@ public class OrderTicketController {
     @Operation(summary = "create order ticket by user id")
     @PostMapping("/create/{userId}")
     public ResponseEntity<ApiResponse> createOrderTicket(
-            @PathVariable Long userId,
-            @RequestBody OrderTicketRequest orderTicketRequest) {
+            @PathVariable("userId") Long userId,
+            @RequestBody @Valid OrderTicketRequest orderTicketRequest) {
         ApiResponse response = ApiResponse.succeed(orderTicketService.createOrderTicket(userId, orderTicketRequest));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @Operation(summary = "create order ticket by user id")
+    @Operation(summary = "update order ticket by user id and order ticket id")
+    @PutMapping("/update/{userId}/{orderTicketId}")
+    public ResponseEntity<ApiResponse> createOrderTicket(
+            @PathVariable("userId") Long userId,
+            @PathVariable("orderTicketId") Long orderTicketId,
+            @RequestBody @Valid OrderTicketRequest orderTicketRequest) {
+        ApiResponse response = ApiResponse.succeed(orderTicketService.updateOrderTicket(userId, orderTicketId, orderTicketRequest));
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Operation(summary = "delete order ticket by user id")
     @DeleteMapping("/delete/{orderTicketId}")
     public ResponseEntity<ApiResponse> deleteOrderTicket(
-            @PathVariable Long orderTicketId) {
+            @PathVariable("orderTicketId") Long orderTicketId) {
         ApiResponse response = ApiResponse.succeed(orderTicketService.deleteOrderTicket(orderTicketId));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -56,7 +66,7 @@ public class OrderTicketController {
     @Operation(summary = "validate order ticket by user id")
     @PutMapping("/confirm")
     public ResponseEntity<ApiResponse> validateOrderTicket(
-            @RequestBody OrderTicket orderTicket) {
+            @RequestBody @Valid OrderTicket orderTicket) {
         ApiResponse response = ApiResponse.succeed(orderTicketService.confirmOrder(orderTicket));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -67,7 +77,7 @@ public class OrderTicketController {
             @PathVariable("userId") Long userId,
             @RequestParam(value = "pageNo", defaultValue = "1", required = false) int pageNo,
             @RequestParam(value = "pageSize", defaultValue = "10", required = false) int pageSize,
-            @RequestParam(value = "sortBy", defaultValue = "orderTicketId", required = false) String sortBy
+            @RequestParam(value = "sortBy", defaultValue = "id", required = false) String sortBy
     ) {
         Pageable pageable = PageRequest.of(pageNo - 1, pageSize, Sort.by(sortBy).ascending());
         ApiResponse response = ApiResponse.succeed(orderTicketService.getCartTicketsByUserId(userId, pageable));
@@ -79,7 +89,7 @@ public class OrderTicketController {
             @PathVariable("orderId") Long orderId,
             @RequestParam(value = "pageNo", defaultValue = "1", required = false) int pageNo,
             @RequestParam(value = "pageSize", defaultValue = "10", required = false) int pageSize,
-            @RequestParam(value = "sortBy", defaultValue = "orderTicketId", required = false) String sortBy
+            @RequestParam(value = "sortBy", defaultValue = "id", required = false) String sortBy
     ) {
         Pageable pageable = PageRequest.of(pageNo - 1, pageSize, Sort.by(sortBy).ascending());
         ApiResponse response = ApiResponse.succeed(orderTicketService.getOrderTicketsByOrderId(orderId, pageable));

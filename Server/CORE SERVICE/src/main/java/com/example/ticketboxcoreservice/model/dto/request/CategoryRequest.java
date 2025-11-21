@@ -9,5 +9,4 @@ import lombok.*;
 @Builder
 public class CategoryRequest {
     private Long id;
-    private String name;
 }

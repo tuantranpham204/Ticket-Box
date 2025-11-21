@@ -28,7 +28,6 @@ public class Event {
     private Boolean online;
     @Column(name = "addr")
     private String address;
-    private String info;
     private String orgName;
     private String orgInfo;
     private Integer status;
@@ -36,6 +35,15 @@ public class Event {
     private LocalDateTime endDate;
     private LocalDateTime createDate;
     private LocalDateTime updateDate;
+
+    @OneToOne(fetch = FetchType.LAZY,cascade = {CascadeType.PERSIST,CascadeType.MERGE,CascadeType.DETACH,CascadeType.REFRESH})
+    @JoinColumn(name = "info_id", referencedColumnName = "id")
+    private Pdf info;
+
+    @OneToOne(fetch = FetchType.LAZY,cascade = {CascadeType.PERSIST,CascadeType.MERGE,CascadeType.DETACH,CascadeType.REFRESH})
+    @JoinColumn(name = "contract_id", referencedColumnName = "id")
+    private Pdf contract;
+
     @OneToOne(fetch = FetchType.LAZY,cascade = {CascadeType.PERSIST,CascadeType.MERGE,CascadeType.DETACH,CascadeType.REFRESH})
     @JoinColumn(name = "img_id", referencedColumnName = "id")
     private Image img;
