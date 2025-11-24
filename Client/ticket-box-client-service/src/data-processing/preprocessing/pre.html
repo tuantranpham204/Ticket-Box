@@ -8,11 +8,88 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
         #download-btn {
             padding: 10px 20px;
             font-size: 16px;
             cursor: pointer;
             margin: 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+        }
+        #download-btn:hover {
+            background-color: #0056b3;
+        }
+        #download-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        @media print {
+            #download-btn, h1 {
+                display: none !important;
+            }
+        }
+        h1 {
+            margin-left: 20px;
+            margin-top: 20px;
+        }
+        #content-wrapper {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .content-item {
+            border-bottom: 2px solid #eee;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+            page-break-inside: avoid;
+        }
+        .content-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .content-item img {
+            max-width: 100% !important;
+            height: auto !important;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            object-fit: contain;
+        }
+        .content-item div, .content-item p {
+            margin-bottom: 10px;
+        }
+        .content-item table {
+            width: 100% !important;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        .content-item th, .content-item td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+        .content-item ul, .content-item ol {
+            margin-left: 20px;
+            margin-bottom: 10px;
         }
     </style>
 </head>
@@ -20,46 +97,121 @@
 
     <button id="download-btn">Tải PDF</button>
 
-    <h1>Nội dung trang</h1>
+    <h1>Nội dung tải từ JSON</h1>
 
-    <div id="content-container"></div>
+    <div id="content-wrapper">
+        <div id="content-container"></div>
+    </div>
+
 
     <script>
         const container = document.getElementById('content-container');
         const downloadBtn = document.getElementById('download-btn');
 
 
-        function generatePDF() {
+        downloadBtn.disabled = true;
+        downloadBtn.textContent = 'Đang tải ảnh...';
 
-            const element = document.getElementById('content-container');
 
-            // Tùy chọn cho file PDF
-            const opt = {
-              margin:       1, // Căn lề (đơn vị inch)
-              filename:     'file_cua_toi.pdf', // Tên file
-              image:        { type: 'jpeg', quality: 0.98 },
-              html2canvas:  { scale: 2 }, // Tăng độ phân giải
-              jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-            };
-
-            // Chạy lệnh chuyển đổi và tự động tải file
-            html2pdf().from(element).set(opt).save();
+        function preprocessImages(element) {
+            const images = element.querySelectorAll('img');
+            images.forEach(img => {
+                img.removeAttribute('width');
+                img.removeAttribute('height');
+                img.style.maxWidth = '100%';
+                img.style.height = 'auto';
+            });
+            const divs = element.querySelectorAll('div[width], div[height]');
+            divs.forEach(div => {
+                div.removeAttribute('width');
+                div.removeAttribute('height');
+            });
         }
 
-        // Gán sự kiện click cho nút bấm
+
+        function generatePDF() {
+            downloadBtn.textContent = 'Đang xử lý PDF...';
+            downloadBtn.disabled = true;
+
+            const element = document.getElementById('content-wrapper');
+            const elementForPdf = element.cloneNode(true);
+            preprocessImages(elementForPdf);
+
+            const opt = {
+              margin:       [0.5, 0.5, 0.5, 0.5],
+              filename:     'file_cua_toi.pdf',
+              image:        { type: 'jpeg', quality: 0.98 },
+              html2canvas:  {
+                  scale: 2,
+                  useCORS: true, // Quan trọng: Phải chạy trên server (Live Server)
+                  logging: true,
+                  scrollY: 0,
+                  scrollX: 0
+              },
+              jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' },
+              pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+            };
+
+            html2pdf().from(elementForPdf).set(opt).save().then(() => {
+                // Khôi phục nút bấm sau khi lưu xong
+                downloadBtn.textContent = 'Tải PDF';
+                downloadBtn.disabled = false;
+            });
+        }
+
         downloadBtn.addEventListener('click', generatePDF);
 
 
-        // --- PHẦN TẢI JSON (như cũ) ---
-        fetch('data.json')
+        // --- THAY ĐỔI 2: Hàm mới để chờ tất cả ảnh tải xong ---
+        function waitForImagesToLoad(containerElement) {
+            const images = containerElement.querySelectorAll('img');
+            const promises = [];
+
+            images.forEach(img => {
+                promises.push(new Promise((resolve) => {
+                    if (img.complete) {
+                        // Nếu ảnh đã được load (ví dụ: từ cache)
+                        resolve();
+                    } else {
+                        // Thêm trình nghe sự kiện
+                        img.onload = () => resolve();
+                        img.onerror = () => {
+                            console.error('Không tải được ảnh:', img.src);
+                            resolve(); // Vẫn resolve để không làm kẹt tiến trình
+                        };
+                    }
+                }));
+            });
+
+            // Trả về một Promise sẽ hoàn thành khi TẤT CẢ các ảnh đã 'resolve'
+            return Promise.all(promises);
+        }
+
+
+        fetch('description_only.json')
             .then(response => response.json())
             .then(data => {
-                const allHtml = data.join('');
-                container.innerHTML = allHtml;
+                // Bước 1: Chèn HTML vào trang
+                data.forEach(htmlString => {
+                    const itemWrapper = document.createElement('div');
+                    itemWrapper.className = 'content-item';
+                    itemWrapper.innerHTML = htmlString;
+                    container.appendChild(itemWrapper);
+                });
+
+                // Bước 2: Trả về một Promise chờ ảnh tải xong
+                return waitForImagesToLoad(container);
+            })
+            .then(() => {
+
+                console.log('Tất cả hình ảnh đã sẵn sàng.');
+                downloadBtn.disabled = false;
+                downloadBtn.textContent = 'Tải PDF';
             })
             .catch(error => {
-                console.error('Lỗi khi tải JSON:', error);
+                console.error('Lỗi khi tải JSON hoặc chờ ảnh:', error);
                 container.textContent = 'Không thể tải dữ liệu.';
+                downloadBtn.textContent = 'Lỗi';
             });
     </script>
 
