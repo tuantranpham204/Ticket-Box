@@ -16,29 +16,6 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `s_order_ticket`
---
-
-DROP TABLE IF EXISTS `s_order_ticket`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `s_order_ticket` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `status` bit(1) DEFAULT NULL,
-  `token` varchar(255) DEFAULT NULL,
-  `unit_price` double DEFAULT NULL,
-  `name` varchar(255) DEFAULT NULL,
-  `order_id` bigint DEFAULT NULL,
-  `ticket_id` bigint DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `FKoxqxls66l6fwyyis7j3odbp4o` (`order_id`),
-  KEY `FK79x6to1k6tf8gce4v1hdmmtua` (`ticket_id`),
-  CONSTRAINT `FK79x6to1k6tf8gce4v1hdmmtua` FOREIGN KEY (`ticket_id`) REFERENCES `s_ticket` (`id`),
-  CONSTRAINT `FKoxqxls66l6fwyyis7j3odbp4o` FOREIGN KEY (`order_id`) REFERENCES `s_order` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
 -- Dumping data for table `s_order_ticket`
 --
 
@@ -56,4 +33,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-10-19 19:44:06
+-- Dump completed on 2025-11-24 22:28:58

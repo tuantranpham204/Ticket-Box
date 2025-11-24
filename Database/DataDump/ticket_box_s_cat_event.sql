@@ -16,28 +16,12 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `s_cat_event`
---
-
-DROP TABLE IF EXISTS `s_cat_event`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `s_cat_event` (
-  `s_event_id` bigint NOT NULL,
-  `s_category_id` bigint NOT NULL,
-  PRIMARY KEY (`s_event_id`,`s_category_id`),
-  KEY `FK5lpuvj6h1qq9e7ih9mhkae8mo` (`s_category_id`),
-  CONSTRAINT `FK5lpuvj6h1qq9e7ih9mhkae8mo` FOREIGN KEY (`s_category_id`) REFERENCES `s_category` (`id`),
-  CONSTRAINT `FK86wk0dteo7plxnu4ehpp3ucwi` FOREIGN KEY (`s_event_id`) REFERENCES `s_event` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
 -- Dumping data for table `s_cat_event`
 --
 
 LOCK TABLES `s_cat_event` WRITE;
 /*!40000 ALTER TABLE `s_cat_event` DISABLE KEYS */;
+INSERT INTO `s_cat_event` VALUES (25006,1),(25007,1),(25100,1),(25119,1),(25123,1),(25143,1),(25144,1),(25158,1),(25228,1),(25247,1),(25261,1),(25296,1),(25297,1),(25301,1),(25306,1),(30006,1),(30007,1),(30008,1),(30009,1),(30010,1),(22533,2),(23327,2),(23331,2),(23581,2),(23965,2),(24500,2),(24848,2),(24889,2),(25163,2),(25235,2),(25246,2),(25294,2),(25295,2),(25303,2),(25304,2),(25305,2),(25308,2),(25313,2),(25314,2),(25227,3),(25309,3),(25311,3),(30002,3),(30003,3),(30004,3),(30005,3),(25231,4),(25293,4),(25299,4),(25300,4),(25307,4),(25310,4),(25312,4);
 /*!40000 ALTER TABLE `s_cat_event` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -50,4 +34,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-10-19 19:44:06
+-- Dump completed on 2025-11-24 22:28:57

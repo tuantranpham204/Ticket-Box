@@ -16,33 +16,12 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `s_order`
---
-
-DROP TABLE IF EXISTS `s_order`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `s_order` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `create_date` datetime(6) DEFAULT NULL,
-  `purchase_date` datetime(6) DEFAULT NULL,
-  `purchased` bit(1) DEFAULT NULL,
-  `quantity` bigint DEFAULT NULL,
-  `total_price` double DEFAULT NULL,
-  `update_date` datetime(6) DEFAULT NULL,
-  `customer_id` bigint DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `FK88g7kvsdjg1hhuqild2wu1b4b` (`customer_id`),
-  CONSTRAINT `FK88g7kvsdjg1hhuqild2wu1b4b` FOREIGN KEY (`customer_id`) REFERENCES `s_user` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
 -- Dumping data for table `s_order`
 --
 
 LOCK TABLES `s_order` WRITE;
 /*!40000 ALTER TABLE `s_order` DISABLE KEYS */;
+INSERT INTO `s_order` VALUES (1,NULL,NULL,NULL,NULL,NULL,'2025-11-14 13:01:05.447513',1);
 /*!40000 ALTER TABLE `s_order` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -55,4 +34,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-10-19 19:44:06
+-- Dump completed on 2025-11-24 22:28:58

@@ -16,29 +16,13 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `s_accepted_relationship_ticket`
+-- Dumping data for table `s_role`
 --
 
-DROP TABLE IF EXISTS `s_accepted_relationship_ticket`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `s_accepted_relationship_ticket` (
-  `s_ticket_id` bigint NOT NULL,
-  `s_relationship_id` bigint NOT NULL,
-  PRIMARY KEY (`s_ticket_id`,`s_relationship_id`),
-  KEY `FKd1cr81vqsfteg7n4f79oeihr8` (`s_relationship_id`),
-  CONSTRAINT `FKd1cr81vqsfteg7n4f79oeihr8` FOREIGN KEY (`s_relationship_id`) REFERENCES `s_relationship` (`id`),
-  CONSTRAINT `FKswvbymed3x7va1fyygmite93w` FOREIGN KEY (`s_ticket_id`) REFERENCES `s_ticket` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `s_accepted_relationship_ticket`
---
-
-LOCK TABLES `s_accepted_relationship_ticket` WRITE;
-/*!40000 ALTER TABLE `s_accepted_relationship_ticket` DISABLE KEYS */;
-/*!40000 ALTER TABLE `s_accepted_relationship_ticket` ENABLE KEYS */;
+LOCK TABLES `s_role` WRITE;
+/*!40000 ALTER TABLE `s_role` DISABLE KEYS */;
+INSERT INTO `s_role` VALUES (1,'ROLE_ADMIN'),(2,'ROLE_USER'),(3,'ROLE_APPROVER');
+/*!40000 ALTER TABLE `s_role` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -50,4 +34,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-11-14 13:04:38
+-- Dump completed on 2025-11-24 22:28:58

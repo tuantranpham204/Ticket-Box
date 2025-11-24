@@ -16,35 +16,12 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `s_order`
+-- Dumping data for table `s_relationship`
 --
 
-DROP TABLE IF EXISTS `s_order`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `s_order` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `create_date` datetime(6) DEFAULT NULL,
-  `purchase_date` datetime(6) DEFAULT NULL,
-  `quantity` bigint DEFAULT NULL,
-  `status` int DEFAULT NULL,
-  `total_price` double DEFAULT NULL,
-  `update_date` datetime(6) DEFAULT NULL,
-  `buyer_id` bigint DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `FKd1s19dctip4wh2kryyxd0hd3` (`buyer_id`),
-  CONSTRAINT `FKd1s19dctip4wh2kryyxd0hd3` FOREIGN KEY (`buyer_id`) REFERENCES `s_user` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `s_order`
---
-
-LOCK TABLES `s_order` WRITE;
-/*!40000 ALTER TABLE `s_order` DISABLE KEYS */;
-INSERT INTO `s_order` VALUES (1,NULL,NULL,NULL,NULL,NULL,'2025-11-05 04:45:40.661598',1);
-/*!40000 ALTER TABLE `s_order` ENABLE KEYS */;
+LOCK TABLES `s_relationship` WRITE;
+/*!40000 ALTER TABLE `s_relationship` DISABLE KEYS */;
+/*!40000 ALTER TABLE `s_relationship` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -56,4 +33,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-11-05 11:27:19
+-- Dump completed on 2025-11-24 22:28:58

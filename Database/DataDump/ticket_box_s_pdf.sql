@@ -16,28 +16,12 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `s_image`
+-- Dumping data for table `s_pdf`
 --
 
-DROP TABLE IF EXISTS `s_image`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `s_image` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `public_id` varchar(255) DEFAULT NULL,
-  `url` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `s_image`
---
-
-LOCK TABLES `s_image` WRITE;
-/*!40000 ALTER TABLE `s_image` DISABLE KEYS */;
-INSERT INTO `s_image` VALUES (1,NULL,'https://i.pinimg.com/736x/a7/b3/0c/a7b30c31d2293673a058e002696c9c79.jpg'),(2,NULL,'https://i.pinimg.com/736x/a7/b3/0c/a7b30c31d2293673a058e002696c9c79.jpg');
-/*!40000 ALTER TABLE `s_image` ENABLE KEYS */;
+LOCK TABLES `s_pdf` WRITE;
+/*!40000 ALTER TABLE `s_pdf` DISABLE KEYS */;
+/*!40000 ALTER TABLE `s_pdf` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -49,4 +33,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-11-14 13:04:38
+-- Dump completed on 2025-11-24 22:28:58
