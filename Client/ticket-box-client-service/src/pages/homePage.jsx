@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import ChatbotV1 from '../components/ChatbotV1';
 import { 
   ChevronLeft, ChevronRight, Music, Theater, Palette, Tag, 
 } from 'lucide-react';
@@ -197,7 +198,7 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-
+        <ChatbotV1 />
       </div>
     </div>
   );
