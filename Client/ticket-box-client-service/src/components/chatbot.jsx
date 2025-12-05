@@ -12,42 +12,69 @@ const ChatbotV1 = () => {
   };
 
   return (
-    <div style={{ position: "fixed", bottom: "15px", right: "15px", fontFamily: "Arial" }}>
-      <button onClick={() => setShow(!show)} style={{ padding: "8px 15px", cursor: "pointer" }}>
+    <div style={{ position: "fixed", bottom: "15px", right: "15px", fontFamily: "Arial", zIndex: 10000 }}>
+      <button 
+        onClick={() => setShow(!show)} 
+        style={{ 
+          padding: "10px 20px", 
+          cursor: "pointer", 
+          borderRadius: "20px", 
+          border: "1px solid #ccc",
+          background: "#f0f0f0"
+        }}
+      >
         Hỗ trợ trực tuyến
       </button>
 
       {show && (
-        <div style={{ width: "320px", height: "420px", border: "1px solid #999", display: "flex", flexDirection: "column", background: "white" }}>
-          <div style={{ background: "#eee", padding: "10px", borderBottom: "1px solid #999" }}>
-            <b>Ticket-Box Support</b>
+        <div style={{ 
+          width: "320px", 
+          height: "450px", 
+          border: "1px solid #ddd", 
+          display: "flex", 
+          flexDirection: "column", 
+          background: "white",
+          marginTop: "10px",
+          borderRadius: "10px",
+          overflow: "hidden",
+          boxShadow: "0 0 10px rgba(0,0,0,0.1)"
+        }}>
+          <div style={{ background: "#f5f5f5", padding: "12px", borderBottom: "1px solid #ddd" }}>
+            <b style={{ fontSize: "14px" }}>Ticket-Box Support (Beta)</b>
           </div>
 
-          <div style={{ flex: 1, padding: "10px", overflowY: "auto" }}>
+          <div style={{ flex: 1, padding: "15px", overflowY: "auto", background: "#ffffff" }}>
             {list.map((item, i) => (
               <div key={i} style={{ 
-                marginBottom: "10px", 
-                textAlign: item.type === "user" ? "right" : "left" 
+                marginBottom: "12px", 
+                display: "flex",
+                justifyContent: item.type === "user" ? "flex-end" : "flex-start" 
               }}>
-                <span style={{ 
-                  display: "inline-block", 
-                  padding: "5px 10px", 
-                  background: item.type === "user" ? "#e1ffc7" : "#f1f0f0",
-                  border: "1px solid #ccc"
+                <div style={{ 
+                  maxWidth: "80%",
+                  padding: "8px 12px", 
+                  borderRadius: "15px",
+                  fontSize: "13px",
+                  lineHeight: "1.5",
+                  background: item.type === "user" ? "#007bff" : "#e9e9eb",
+                  color: item.type === "user" ? "white" : "black",
+                  borderTopRightRadius: item.type === "user" ? "2px" : "15px",
+                  borderTopLeftRadius: item.type === "bot" ? "2px" : "15px"
                 }}>
                   {item.text}
-                </span>
+                </div>
               </div>
             ))}
           </div>
 
-          <div style={{ padding: "10px", borderTop: "1px solid #999" }}>
+          <div style={{ padding: "10px", borderTop: "1px solid #eee", display: "flex" }}>
             <input 
-              style={{ width: "75%", padding: "5px" }} 
+              style={{ flex: 1, padding: "8px", border: "1px solid #ddd", borderRadius: "4px", outline: "none" }} 
               value={msg} 
               onChange={(e) => setMsg(e.target.value)} 
+              placeholder="Nhập nội dung..."
             />
-            <button onClick={sendMsg} style={{ width: "20%", marginLeft: "5%" }}>Gửi</button>
+            <button onClick={sendMsg} style={{ marginLeft: "5px", padding: "0 10px", cursor: "pointer" }}>Gửi</button>
           </div>
         </div>
       )}
