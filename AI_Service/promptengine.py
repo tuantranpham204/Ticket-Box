@@ -4,8 +4,9 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 
-KEY = "AIzaSyAGV4PwA6TUr7LFGRr2bR8JjafN0c1hO2k"
-genai.configure(api_key=KEY)
+# Config
+GOOGLE_API_KEY = "AIzaSyBLkYfRLw8s7k74sWTXnJE0999Dc_Q6m90"
+genai.configure(api_key=GOOGLE_API_KEY)
 model = genai.GenerativeModel('gemini-1.5-flash')
 
 app = FastAPI()
@@ -17,32 +18,48 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-def get_data():
+def load_context():
     try:
-        f = open("../data-processing/output/data_tach_success.json", "r", encoding="utf-8")
-        d = json.load(f)
-        f.close()
-        return d
+        with open("../data-processing/output/data_tach_success.json", "r", encoding="utf-8") as f:
+            return json.load(f)
     except:
         return []
 
-class Req(BaseModel):
+class ChatReq(BaseModel):
     question: str
 
 @app.post("/chat")
-async def chat(r: Req):
-    db_json = get_data()
+async def handle_chat(req: ChatReq):
+    events = load_context()
     
+    # Prompt Engineering nâng cao (Few-shot & Constraints)
     prompt = f"""
-    Role: Ticket-Box Support V1
-    Data: {json.dumps(db_json, ensure_ascii=False)}
-    User: {r.question}
-    
-    Rules:
-    - Tra loi ngan gon theo data json.
-    - Neu khong co thi bao khong tim thay.
-    - Format: Ten, Ngay, Gia (moi cai 1 dong).
+    [SYSTEM ROLE]
+    Bạn là Đại diện Chăm sóc Khách hàng của Ticket-Box. Phong cách: Nhiệt tình, chuyên nghiệp, hỗ trợ tối đa.
+
+    [CONTEXT DATA]
+    Dữ liệu sự kiện hiện tại (JSON): {json.dumps(events, ensure_ascii=False)}
+
+    [OBJECTIVES]
+    1. Cung cấp thông tin vé chính xác theo dữ liệu được cung cấp.
+    2. Nếu có nhiều sự kiện khớp, hãy liệt kê dưới dạng danh sách.
+    3. Luôn kết thúc bằng một câu gợi mở (Ví dụ: "Bạn có muốn mình hỗ trợ đặt vé không?").
+
+    [CONSTRAINTS - RÀNG BUỘC]
+    - KHÔNG được bịa đặt thông tin không có trong Context.
+    - KHÔNG trả lời các câu hỏi ngoài lề không liên quan đến Ticket-Box hoặc sự kiện.
+    - Nếu khách hỏi về giá vé mà trong data không có, hãy báo "Giá vé đang được cập nhật".
+    - Sử dụng tiếng Việt chuẩn, không dùng ngôn ngữ teen.
+
+    [OUTPUT FORMAT]
+    - Tên sự kiện: [VIẾT HOA ĐẬM]
+    - Thời gian: [Ngày/Tháng/Năm]
+    - Địa điểm: [Tên địa điểm]
+    - Giá: [Giá tiền hoặc trạng thái]
+
+    [USER QUESTION]
+    {req.question}
     """
     
-    res = model.generate_content(prompt)
-    return {"answer": res.text}
+    response = model.generate_content(prompt)
+    return {"answer": response.text}
