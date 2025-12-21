@@ -38,14 +38,12 @@ public class AuthenticationController {
         ApiResponse response = ApiResponse.succeed(authenticationService.refreshToken(refreshToken));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
-
     @Operation(summary = "Login", description = "Login API")
     @PostMapping("/login")
     public ResponseEntity<ApiResponse> login(@RequestBody @Valid LoginRequest request){
         ApiResponse response = ApiResponse.succeed(authenticationService.login(request));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
-
     @Operation(summary = "Register", description = "Register API")
     @PostMapping("/register")
     public ResponseEntity<ApiResponse> register(@RequestBody @Valid RegisterRequest request){

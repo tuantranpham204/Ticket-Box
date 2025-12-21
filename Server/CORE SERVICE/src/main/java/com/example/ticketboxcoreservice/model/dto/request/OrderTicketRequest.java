@@ -10,7 +10,7 @@ import lombok.*;
 @Builder
 public class OrderTicketRequest {
     private String ownerName;
-    private Relationship relationship;
+    private Long relationshipId;
     private Long ticketId;
     private Long subQuantity;
 }

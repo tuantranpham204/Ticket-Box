@@ -14,6 +14,7 @@ import com.example.ticketboxcoreservice.model.entity.Order;
 import com.example.ticketboxcoreservice.model.entity.OrderTicket;
 import com.example.ticketboxcoreservice.repository.OrderRepository;
 import com.example.ticketboxcoreservice.repository.OrderTicketRepository;
+import com.example.ticketboxcoreservice.repository.RelationshipRepository;
 import com.example.ticketboxcoreservice.repository.TicketRepository;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.weaver.ast.Or;
@@ -38,17 +39,23 @@ public class OrderTicketService {
     private final QrCodeService qrCodeService;
     private final ModelMapper modelMapper;
     private final TicketRepository ticketRepository;
+    private final RelationshipRepository relationshipRepository;
 
 
     public OrderTicketResponse createOrderTicket(Long userId, OrderTicketRequest orderTicketRequest) {
         OrderTicket orderTicket = modelMapper.map(orderTicketRequest, OrderTicket.class);
         Order cart = getCartByUserIdFunction(userId);
         orderTicket.setOrder(cart);
-        orderTicket.setTicket(ticketRepository.findById(orderTicketRequest.getTicketId()).orElseThrow(
+        orderTicket.setTicket(
+                ticketRepository.findById(orderTicketRequest.getTicketId()).orElseThrow(
                 () -> new ResourceNotFoundException("ticket", "ticket id", orderTicketRequest.getTicketId())
         ));
         orderTicket.validateSubQuantity();
         orderTicket.setStatus(Constants.ORDER_TICKET_STATUS_INACTIVE);
+        orderTicket.setRelationship(
+                relationshipRepository.findById(orderTicketRequest.getRelationshipId()).orElseThrow(
+                () -> new ResourceNotFoundException("ticket", "ticket id", orderTicketRequest.getTicketId())
+        ));
         orderTicket.setToken(generateOrderTicketToken(orderTicket));
         return modelMapper.map(orderTicketRepository.save(orderTicket), OrderTicketResponse.class);
     }
@@ -66,7 +73,11 @@ public class OrderTicketService {
             throw new  AppException(ErrorCode.ONLY_INACTIVE_ORDER_TICKETS_IS_UPDATABLE_AND_REMOVABLE);
         }
         orderTicket.validateSubQuantity();
-        OrderTicket newOrderTicket = modelMapper.map(orderTicket, OrderTicket.class);
+        OrderTicket newOrderTicket = modelMapper.map(orderTicketRequest, OrderTicket.class);
+        orderTicket.setRelationship(
+                relationshipRepository.findById(orderTicketRequest.getRelationshipId()).orElseThrow(
+                        () -> new ResourceNotFoundException("ticket", "ticket id", orderTicketRequest.getTicketId())
+                ));
         newOrderTicket.setId(orderTicket.getId());
         return  modelMapper.map(orderTicketRepository.save(newOrderTicket), OrderTicketResponse.class);
     }

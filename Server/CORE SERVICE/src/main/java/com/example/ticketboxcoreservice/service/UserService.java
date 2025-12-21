@@ -66,8 +66,7 @@ public class UserService {
             } else  updatedAvatar = modelMapper.map(imageService.updateImageByImageId(avatarImgId, request), Image.class);
         } catch (IOException e) {
             throw new IllegalArgumentException(e.getMessage());
-        }
-        user.setAvatar(updatedAvatar);
+        }         user.setAvatar(updatedAvatar);
         return modelMapper.map(userRepository.save(user), UserResponse.class);
     }
     public MessageResponse updatePasswordByUserId(Long id, String updatedPassword) {

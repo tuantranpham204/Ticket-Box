@@ -8,16 +8,26 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import javax.swing.text.html.Option;
 import java.util.List;
+import java.util.Optional;
 
 public interface EventRepository extends JpaRepository<Event,Long> {
-    @Query("SELECT e FROM Event e JOIN e.categories c where c.id=:categoryId")
-    Page<Event> findByCategoryId(Long categoryId, Pageable pageable);
-    @Query("SELECT e FROM Event e JOIN e.host u where u.id=:hostId")
-    Page<Event> findByHostId(Long hostId, Pageable pageable);
+    @Query("SELECT e FROM Event e JOIN e.categories c where c.id=:categoryId AND e.status=:eventStatus")
+    Page<Event> findByCategoryIdAndStatus(Long categoryId, Integer eventStatus, Pageable pageable);
+    @Query("SELECT e FROM Event e JOIN e.host u where u.id=:hostId AND e.status=:eventStatus ")
+    Page<Event> findByHostIdAndStatus(Long hostId, Integer eventStatus, Pageable pageable);
     @Query("SELECT e FROM Event e JOIN e.approver u where u.id=:approverId")
-    Page<Event> findByApproverId(Long approverId, Pageable pageable);
+    Page<Event> findByApproverIdAndStatus(Long approverId, Integer eventStatus , Pageable pageable);
+    @Query("SELECT e FROM Event e WHERE e.status=:status")
+    Page<Event> findByStatus(Integer status, Pageable pageable);
+
+    @Query("SELECT e.contract FROM Event e WHERE e.id=:eventId")
+    Optional<Pdf> findContractByEventId(Long eventId);
+
     @Query("SELECT e FROM Event e WHERE e.name LIKE CONCAT('%', :params, '%') OR e.address LIKE CONCAT('%', :params, '%') OR e.orgName LIKE CONCAT('%', :params, '%')")
     List<Event> search(String params);
+    @Query("SELECT e FROM Event e WHERE e.status=:status")
+    Page<Event> findByStatus(String status, Pageable pageable);
 
 }

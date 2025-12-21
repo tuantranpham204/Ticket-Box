@@ -105,33 +105,37 @@ public class EventService {
         return modelMapper.map(event, EventResponse.class);
     }
     @Transactional
-    public CustomPage<EventResponse> getEventByCategoryId(Long categoryId, Pageable pageable) {
-        Page<Event> events = eventRepository.findByCategoryId(categoryId, pageable);
+    public CustomPage<EventResponse> getEventByCategoryIdAndStatus(Long categoryId, Integer eventStatus, Pageable pageable) {
+        Page<Event> events = eventRepository.findByCategoryIdAndStatus(categoryId, eventStatus, pageable);
         return CustomPage.<EventResponse>builder()
                 .pageNo(events.getNumber() + 1)
                 .pageSize(events.getSize())
+                .totalPages(events.getTotalPages())
+                .totalPages(events.getTotalPages())
                 .pageContent(events.getContent().stream().map(
                         event -> modelMapper.map(event, EventResponse.class)
                 ).collect(Collectors.toList()))
                 .build();
     }
     @Transactional
-    public CustomPage<EventResponse> getEventByCreatorUserId(Long creatorUserId, Pageable pageable) {
-        Page<Event> events = eventRepository.findByHostId(creatorUserId, pageable);
+    public CustomPage<EventResponse> getEventByCreatorUserId(Long creatorUserId, Integer status, Pageable pageable) {
+        Page<Event> events = eventRepository.findByHostIdAndStatus(creatorUserId,status, pageable);
         return CustomPage.<EventResponse>builder()
                 .pageNo(events.getNumber() + 1)
                 .pageSize(events.getSize())
+                .totalPages(events.getTotalPages())
                 .pageContent(events.getContent().stream().map(
                         event -> modelMapper.map(event, EventResponse.class)
                 ).collect(Collectors.toList()))
                 .build();
     }
     @Transactional
-    public CustomPage<EventResponse> getEventByApproverUserId(Long approverUserId, Pageable pageable) {
-        Page<Event> events = eventRepository.findByHostId(approverUserId, pageable);
+    public CustomPage<EventResponse> getEventByApproverUserId(Long approverUserId, Integer eventStatus, Pageable pageable) {
+        Page<Event> events = eventRepository.findByApproverIdAndStatus(approverUserId, eventStatus, pageable);
         return CustomPage.<EventResponse>builder()
                 .pageNo(events.getNumber() + 1)
                 .pageSize(events.getSize())
+                .totalPages(events.getTotalPages())
                 .pageContent(events.getContent().stream().map(
                         event -> modelMapper.map(event, EventResponse.class)
                 ).collect(Collectors.toList()))
@@ -139,8 +143,8 @@ public class EventService {
     }
     @Transactional
     public PdfResponse getEventContractByEventId(Long eventId) {
-        Pdf contract = pdfRepository.findById(eventId).orElseThrow(
-                () -> new ResourceNotFoundException("event", "event id", eventId)
+        Pdf contract = pdfRepository.findContractByEventId(eventId).orElseThrow(
+                () -> new ResourceNotFoundException("Pdf", "event id", eventId)
         );
         return modelMapper.map(contract, PdfResponse.class);
     }
@@ -205,6 +209,22 @@ public class EventService {
         )).collect(Collectors.toList());
         return events.stream().map(event -> modelMapper.map(event, EventResponse.class)).collect(Collectors.toList());
     }
+    @Transactional
+    public CustomPage<EventResponse> getAllEventsByStatus(Integer status, Pageable pageable) {
+        Page<Event> events = eventRepository.findByStatus(status, pageable);
+        return CustomPage.<EventResponse>builder()
+                .pageNo(events.getNumber() + 1)
+                .pageSize(events.getSize())
+                .totalPages(events.getTotalPages())
+                .pageContent(events.getContent().stream().map(
+                        event -> modelMapper.map(event, EventResponse.class)
+                ).collect(Collectors.toList()))
+                .build();
+    }
+
+
+
+
 
     private Event mapNotNullValuesFromEventReq(EventRequest request, Event event) {
         // == Simple Primitive/String Fields ==

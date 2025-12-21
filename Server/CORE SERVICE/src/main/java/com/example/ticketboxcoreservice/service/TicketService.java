@@ -9,6 +9,7 @@ import com.example.ticketboxcoreservice.model.dto.response.*;
 import com.example.ticketboxcoreservice.model.entity.Event;
 import com.example.ticketboxcoreservice.model.entity.Ticket;
 import com.example.ticketboxcoreservice.repository.EventRepository;
+import com.example.ticketboxcoreservice.repository.RelationshipRepository;
 import com.example.ticketboxcoreservice.repository.TicketRepository;
 import com.example.ticketboxcoreservice.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class TicketService {
     private final TicketRepository ticketRepository;
+    private final RelationshipRepository relationshipRepository;
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
     private final ModelMapper modelMapper;
@@ -92,6 +94,7 @@ public class TicketService {
         return CustomPage.<TicketResponse>builder()
                 .pageNo(tickets.getNumber()+1)
                 .pageSize(tickets.getSize())
+                .totalPages(tickets.getTotalPages())
                 .pageContent(tickets.getContent().stream().map(
                         ticket -> modelMapper.map(ticket, TicketResponse.class)
                 ).collect(Collectors.toList())).build();

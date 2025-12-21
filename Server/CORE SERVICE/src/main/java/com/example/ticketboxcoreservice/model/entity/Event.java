@@ -71,15 +71,18 @@ public class Event {
         if (LocalDateTime.now().isBefore(startDate)) status = Constants.EVENT_STATUS_UPCOMING;
         else if (LocalDateTime.now().isAfter(endDate)) status = Constants.EVENT_STATUS_ENDED;
         else status = Constants.EVENT_STATUS_RUNNING;
+        for (Ticket ticket : tickets) ticket.approve();
     }
     public void cancel() {
         updateDate = LocalDateTime.now();
         if (status.equals(Constants.EVENT_STATUS_PENDING)) status = Constants.EVENT_STATUS_CANCELED;
         else throw new AppException(ErrorCode.ONLY_PENDING_EVENT_IS_UPDATABLE);
+        for (Ticket ticket : tickets) ticket.cancel();
     }
     public void decline() {
         updateDate = LocalDateTime.now();
         if (status.equals(Constants.EVENT_STATUS_PENDING)) status = Constants.EVENT_STATUS_DECLINED;
         else throw new AppException(ErrorCode.ONLY_PENDING_EVENT_IS_UPDATABLE);
+        for (Ticket ticket : tickets) ticket.decline();
     }
 }

@@ -18,9 +18,11 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.net.Inet4Address;
 import java.util.List;
 
 @RestController
@@ -105,38 +107,41 @@ public class EventController {
     }
 
     @Operation(summary = "get event by category id")
-    @GetMapping("/category/{catId}")
-    public ResponseEntity<ApiResponse> getEventByCatId(
+    @GetMapping("/category/{catId}/{status}")
+    public ResponseEntity<ApiResponse> getEventByCatIdAndStatus(
             @PathVariable("catId") Long catId,
+            @PathVariable("status") Integer status,
             @RequestParam(value = "pageNo", defaultValue = "1", required = false) int pageNo,
             @RequestParam(value = "pageSize", defaultValue = "10", required = false) int pageSize,
             @RequestParam(value = "sortBy", defaultValue = "id", required = false) String sortBy) {
         Pageable pageable = PageRequest.of(pageNo - 1, pageSize, Sort.by(sortBy).ascending());
-        ApiResponse response = ApiResponse.succeed(eventService.getEventByCategoryId(catId, pageable));
+        ApiResponse response = ApiResponse.succeed(eventService.getEventByCategoryIdAndStatus(catId, status, pageable));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @Operation(summary = "get event by creator user id")
-    @GetMapping("/creator/{creatorUserId}")
-    public ResponseEntity<ApiResponse> getEventByCreatorId(
+    @Operation(summary = "get event by creator user id and status")
+    @GetMapping("/creator/{creatorUserId}/{status}")
+    public ResponseEntity<ApiResponse> getEventByCreatorIdAndStatus(
             @PathVariable("creatorUserId") Long creatorUserId,
+            @PathVariable("status") Integer eventStatus,
             @RequestParam(value = "pageNo", defaultValue = "1", required = false) int pageNo,
             @RequestParam(value = "pageSize", defaultValue = "10", required = false) int pageSize,
             @RequestParam(value = "sortBy", defaultValue = "id", required = false) String sortBy) {
         Pageable pageable = PageRequest.of(pageNo - 1, pageSize, Sort.by(sortBy).ascending());
-        ApiResponse response = ApiResponse.succeed(eventService.getEventByCreatorUserId(creatorUserId, pageable));
+        ApiResponse response = ApiResponse.succeed(eventService.getEventByCreatorUserId(creatorUserId, eventStatus, pageable));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @Operation(summary = "get event by creator user id")
-    @GetMapping("/approver/{approverUserId}")
-    public ResponseEntity<ApiResponse> getEventByApproverId(
+    @GetMapping("/approver/{approverUserId}/{status}")
+    public ResponseEntity<ApiResponse> getEventByApproverIdAndStatus(
             @PathVariable("approverUserId") Long approverUserId,
+            @PathVariable("status") Integer status,
             @RequestParam(value = "pageNo", defaultValue = "1", required = false) int pageNo,
             @RequestParam(value = "pageSize", defaultValue = "10", required = false) int pageSize,
             @RequestParam(value = "sortBy", defaultValue = "id", required = false) String sortBy) {
         Pageable pageable = PageRequest.of(pageNo - 1, pageSize, Sort.by(sortBy).ascending());
-        ApiResponse response = ApiResponse.succeed(eventService.getEventByApproverUserId(approverUserId, pageable));
+        ApiResponse response = ApiResponse.succeed(eventService.getEventByApproverUserId(approverUserId,status, pageable));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -169,6 +174,17 @@ public class EventController {
     public ResponseEntity<ApiResponse> getEventsByEventIds(
             @RequestParam(value = "eventId") List<Long> eventIds) {
         ApiResponse response = ApiResponse.succeed(eventService.getEventsByEventIds(eventIds));
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+    @Operation(summary = "get event by status")
+    @GetMapping("/{status}")
+    public ResponseEntity<ApiResponse> getAllEventsByStatus(
+            @PathVariable("status") Integer status,
+            @RequestParam(value = "pageNo", defaultValue = "1", required = false) int pageNo,
+            @RequestParam(value = "pageSize", defaultValue = "10", required = false) int pageSize,
+            @RequestParam(value = "sortBy", defaultValue = "id", required = false) String sortBy) {
+        Pageable pageable = PageRequest.of(pageNo-1, pageSize, Sort.by(sortBy).ascending());
+        ApiResponse response = ApiResponse.succeed(eventService.getAllEventsByStatus(status, pageable));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
