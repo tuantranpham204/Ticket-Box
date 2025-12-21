@@ -91,7 +91,7 @@ const EventCreationPage = () => {
     }
   }, [watchedBanner]);
 
-  const onSubmit = async (data) => {
+  const onSubmit = async(data) => {
     try {
       // 1. Files
       const formData = new FormData();

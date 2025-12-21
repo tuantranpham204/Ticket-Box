@@ -1,10 +1,13 @@
 import React from "react";
 import { useParams, Link } from "react-router-dom";
 import { useEventByEventId } from "../hooks/useEventHook";
+import { useAuthStore } from "../store/useAuthStore";
 import {
   useGetTicketsByEventId,
   useLowestTicketPriceByEventId,
 } from "../hooks/useTicketHook";
+import { useAddToCartMutation } from "../hooks/useCartHook";
+import { useUIStore } from "../store/useUiStore";
 import {
   MapPin,
   Calendar,
@@ -14,6 +17,9 @@ import {
   ArrowRight,
   Building2,
   Map,
+  FileText,
+  Globe,
+  Video
 } from "lucide-react";
 import EventCard from "../components/eventCard"; // For "You may also like"
 
@@ -156,6 +162,26 @@ const EventDetailPage = () => {
     isError: isErrorPrice,
   } = useLowestTicketPriceByEventId(eventId);
 
+  const addToCartMutation = useAddToCartMutation();
+  const { user } = useAuthStore();
+  const { openAuthModal } = useUIStore();
+
+  const handleAddToCart = (ticketId) => {
+    if (!user) {
+      openAuthModal("login");
+      return;
+    }
+    // Default quantity to 1 for now
+    addToCartMutation.mutate({ ticketId, quantity: 1 });
+  };
+
+  const scrollToTickets = () => {
+    const ticketSection = document.getElementById('tickets');
+    if (ticketSection) {
+      ticketSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   let displayPrice;
   if (isLoadingPrice) {
     displayPrice = "Loading...";
@@ -191,13 +217,14 @@ const EventDetailPage = () => {
     bannerUrl:
       event?.banner?.url ||
       "https://placehold.co/1200x500/1a1a1a/ffffff?text=Event+Banner",
+    online: event?.online,
     organizer: {
       name: event?.orgName || "Organization Name",
       description: event?.orgInfo || "Organization Information",
       logoUrl: "https://placehold.co/200x200/ffffff/111?text=MAY",
     },
     pdfInfoUrl:
-      event?.info ||
+      (event?.info?.url ? event.info.url.replace(/^http:\/\//i, 'https://') : null) ||
       "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf", // Using a dummy PDF
   };
 
@@ -208,17 +235,29 @@ const EventDetailPage = () => {
         <div className="container mx-auto flex max-w-7xl items-center justify-between px-4">
           <div className="flex flex-col overflow-hidden">
             <h1 className="truncate text-lg font-bold">{mockEvent.title}</h1>
-            {/* Use Compact Address Display */}
+            {/* Use Compact Address Display or Online Indicator */}
             <div className="mt-1 flex items-center text-gray-400">
-              <MapPin className="mr-1.5 h-4 w-4 flex-shrink-0" />
-              <AddressDisplay
-                addressString={mockEvent.address}
-                compact={true}
-              />
+              {mockEvent.online ? (
+                <>
+                  <Globe className="mr-1.5 h-4 w-4 flex-shrink-0 text-blue-400" />
+                  <span className="text-sm font-medium text-white">Online Event</span>
+                </>
+              ) : (
+                <>
+                  <MapPin className="mr-1.5 h-4 w-4 flex-shrink-0" />
+                  <AddressDisplay
+                    addressString={mockEvent.address}
+                    compact={true}
+                  />
+                </>
+              )}
             </div>
           </div>
-          <button className="ml-4 flex-shrink-0 rounded-full bg-green-600 px-6 py-2 font-semibold text-white transition-colors hover:bg-green-700">
-            Buy Tickets
+          <button
+            onClick={scrollToTickets}
+            className="ml-4 flex-shrink-0 rounded-full bg-green-600 px-6 py-2 font-semibold text-white transition-colors hover:bg-green-700"
+          >
+            Get Tickets
           </button>
         </div>
       </div>
@@ -233,8 +272,8 @@ const EventDetailPage = () => {
               alt={mockEvent.title}
               className="h-auto w-full object-cover"
               onError={(e) =>
-                (e.currentTarget.src =
-                  "https://placehold.co/1200x500/1a1a1a/ffffff?text=Event+Banner")
+              (e.currentTarget.src =
+                "https://placehold.co/1200x500/1a1a1a/ffffff?text=Event+Banner")
               }
             />
           </div>
@@ -271,12 +310,22 @@ const EventDetailPage = () => {
                   </div>
                 </div>
 
-                {/* Full Address Display */}
+                {/* Full Address Display or Online Indicator */}
                 <div className="border-t border-gray-700 pt-4">
-                  <AddressDisplay
-                    addressString={mockEvent.address}
-                    compact={false}
-                  />
+                  {mockEvent.online ? (
+                    <div className="flex items-start gap-2">
+                      <Video className="h-5 w-5 flex-shrink-0 text-blue-400 mt-0.5" />
+                      <div>
+                        <span className="block font-bold text-white">Online Event</span>
+                        <span className="text-sm text-gray-400">Watch from anywhere</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <AddressDisplay
+                      addressString={mockEvent.address}
+                      compact={false}
+                    />
+                  )}
                 </div>
               </div>
 
@@ -287,8 +336,11 @@ const EventDetailPage = () => {
                 {displayPrice}
               </p>
 
-              <button className="mt-6 w-full rounded-full bg-green-600 py-3 text-lg font-semibold text-white transition-colors hover:bg-green-700">
-                Buy Tickets
+              <button
+                onClick={scrollToTickets}
+                className="mt-6 w-full rounded-full bg-green-600 py-3 text-lg font-semibold text-white transition-colors hover:bg-green-700"
+              >
+                Get Tickets
               </button>
             </div>
           </div>
@@ -332,8 +384,12 @@ const EventDetailPage = () => {
                         <span className="text-xl font-bold text-green-400">
                           {ticket.unitPrice.toLocaleString()} đ
                         </span>
-                        <button className="rounded-full bg-blue-600 px-6 py-2 font-semibold text-white transition-colors hover:bg-blue-700">
-                          Buy
+                        <button
+                          onClick={() => handleAddToCart(ticket.id)}
+                          disabled={addToCartMutation.isPending}
+                          className="rounded-full bg-blue-600 px-6 py-2 font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+                        >
+                          {addToCartMutation.isPending ? "Adding..." : "Add to Cart"}
                         </button>
                       </div>
                     </div>
@@ -348,17 +404,29 @@ const EventDetailPage = () => {
             >
               <h3 className="mb-4 text-xl font-semibold">Introduction</h3>
               <p className="mb-4 text-gray-300">{mockEvent.orgInfo}</p>
-              <div className="h-[800px] w-full overflow-hidden rounded-lg border border-gray-700">
-                <iframe
-                  src={mockEvent.pdfInfoUrl}
-                  title="Event Details"
-                  width="100%"
-                  height="100%"
-                  className="bg-white"
-                >
-                  Your browser does not support PDFs. Please download the PDF to
-                  view it.
-                </iframe>
+              <div className="h-[800px] w-full overflow-hidden rounded-lg border border-gray-700 bg-white">
+                {mockEvent.pdfInfoUrl && /\.(jpg|jpeg|png|gif|webp)$/i.test(mockEvent.pdfInfoUrl) ? (
+                  <div className="h-full w-full flex items-center justify-center bg-gray-900">
+                    <img
+                      src={mockEvent.pdfInfoUrl}
+                      alt="Event Info"
+                      className="max-h-full max-w-full object-contain"
+                    />
+                  </div>
+                ) : (
+                  <iframe
+                    src={mockEvent.pdfInfoUrl}
+                    title="Event Details"
+                    width="100%"
+                    height="100%"
+                    loading="lazy"
+                    sandbox="allow-scripts allow-same-origin allow-popups"
+                    className="bg-white"
+                  >
+                    Your browser does not support PDFs. Please download the PDF to
+                    view it.
+                  </iframe>
+                )}
               </div>
             </div>
 

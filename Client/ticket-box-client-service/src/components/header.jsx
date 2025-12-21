@@ -1,12 +1,26 @@
 import React, { useState } from "react";
-import { Search, Ticket, User, PlusCircle } from "lucide-react";
+import { Search, Ticket, User, PlusCircle, ShoppingCart } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import { useUIStore } from "../store/useUiStore";
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function Header() {
-  const { user, logout } = useAuthStore();
+  const { user, logout, hasRole } = useAuthStore();
   const { openAuthModal } = useUIStore();
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
 
   return (
     <header className="sticky top-0 z-40 bg-gray-900/80 backdrop-blur-md">
@@ -48,13 +62,19 @@ export default function Header() {
             <input
               type="text"
               placeholder="Search events..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
               className="w-full rounded-full bg-gray-800 py-2.5 pl-10 pr-20 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <Search
               id="searchbar"
               className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400"
             />
-            <button className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-full bg-gray-700 px-4 py-1.5 text-sm font-semibold hover:bg-gray-600">
+            <button
+              onClick={handleSearch}
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-full bg-gray-700 px-4 py-1.5 text-sm font-semibold hover:bg-gray-600"
+            >
               Search
             </button>
           </div>
@@ -69,14 +89,24 @@ export default function Header() {
             Create Event
           </Link>
 
+          {hasRole("ROLE_APPROVER") && (
+            <Link
+              to="/approver-dashboard"
+              className="hidden items-center gap-2 rounded-full bg-purple-600 px-4 py-2 text-sm font-semibold hover:bg-purple-700 md:flex"
+            >
+              Approver
+              Dashboard
+            </Link>
+          )}
+
           {user ? (
             <>
               <a
-                href="/my-tickets"
+                href="/cart-tickets"
                 className="flex items-center gap-2 text-sm font-medium hover:text-blue-400"
               >
-                <Ticket className="h-5 w-5" />
-                My Tickets
+                <ShoppingCart className="h-5 w-5" />
+                Ticket Cart
               </a>
               <button
                 onClick={logout}

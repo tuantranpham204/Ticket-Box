@@ -1,7 +1,7 @@
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { Toaster } from "sonner";
+import { Toaster, toast } from "sonner";
 import Layout from "./components/layout";
 import AuthModal from "./components/authModal";
 
@@ -11,7 +11,10 @@ import { useAuthStore } from "./store/useAuthStore";
 // --- Page Components ---
 const HomePage = React.lazy(() => import("./pages/homePage"));
 const EventDetailPage = React.lazy(() => import("./pages/eventDetailPage"));
-const EventCreationPage = React.lazy(() => import("./pages/eventCreationPage"))
+const EventCreationPage = React.lazy(() => import("./pages/eventCreationPage")); // Ensure file name matches exactly
+const ApproverDashboard = React.lazy(() => import("./pages/approverDashboard"));
+const SearchResultsPage = React.lazy(() => import("./pages/searchResultsPage"));
+const CartPage = React.lazy(() => import("./pages/cartPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,6 +42,8 @@ export default function App() {
               {/* --- Public Routes --- */}
               <Route index element={<HomePage />} />
               <Route path="event/:eventId" element={<EventDetailPage />} />
+              <Route path="search" element={<SearchResultsPage />} />
+
               <Route
                 path="/create-event"
                 element={
@@ -50,16 +55,25 @@ export default function App() {
                 }
               />
 
+              <Route
+                path="/approver-dashboard"
+                element={
+                  <RoleBasedRoute roles={['ROLE_APPROVER']}>
+                    <ApproverDashboard />
+                  </RoleBasedRoute>
+                }
+              />
+
+              <Route path="/cart-tickets" element={
+                <RoleBasedRoute roles={['ROLE_USER', 'ROLE_APPROVER', 'ROLE_ADMIN']}>
+                  <CartPage />
+                </RoleBasedRoute>
+              } />
+
               {/* --- Protected Routes (Example) --- */}
-              {/* Uncomment these as you build the components */}
               {/* <Route path="/my-tickets" element={
                 <RoleBasedRoute roles={['ROLE_USER']}>
                   <MyTicketsPage />
-                </RoleBasedRoute>
-              } /> */}
-              {/* <Route path="/admin" element={
-                <RoleBasedRoute roles={['ROLE_ADMIN', 'ROLE_APPROVER']}>
-                  <AdminDashboard />
                 </RoleBasedRoute>
               } /> */}
 
@@ -67,6 +81,7 @@ export default function App() {
               {/* Any path not matched above will redirect to the home page */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
+            <Route path="/cart-tickets" element={<CartPage />} />
           </Routes>
         </Suspense>
       </BrowserRouter>
@@ -87,7 +102,7 @@ const LoadingSpinner = () => (
 
 /**
  * A component to protect routes based on user roles.
- * It checks the auth state from Zustand.
+ * It checks the auth state from Zustand and triggers a toast on failure.
  * @param {{ children: React.ReactNode, roles: string[] }} props
  */
 const RoleBasedRoute = ({ children, roles }) => {
@@ -97,14 +112,22 @@ const RoleBasedRoute = ({ children, roles }) => {
   const isAuth = !!user;
 
   // Check if user has one of the required roles
-  // We assume the `user` object has a `roles` array like:
-  // user.roles = [{ name: 'ROLE_USER' }, { name: 'ROLE_ADMIN' }]
+  // Using optional chaining to be safe if user or user.roles is undefined
   const hasRole =
-    isAuth && user.roles.some((role) => roles.includes(role.name));
+    isAuth && user?.roles?.some((role) => roles.includes(role.name));
+
+  // Use useEffect to trigger the toast as a side effect.
+  // This prevents the "Cannot update a component while rendering a different component" warning.
+  useEffect(() => {
+    if (!isAuth) {
+      toast.error("You must be logged in to access this page.");
+    } else if (!hasRole) {
+      toast.error("You do not have permission to view this page.");
+    }
+  }, [isAuth, hasRole]);
 
   if (!isAuth || !hasRole) {
     // Redirect to home page if not authenticated or authorized
-    console.warn("Unauthorized access attempt to a protected route.");
     return <Navigate to="/" replace />;
   }
 

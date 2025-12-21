@@ -13,6 +13,7 @@ import {
   useEventsByEventIds,
   useEventsByCategory,
 } from "../hooks/useEventHook";
+import { EVENT_STATUS } from "../utils/util";
 
 // Destinations mock data
 const mockDestinations = [
@@ -47,7 +48,7 @@ const EventSection = ({ title, categoryId, link = "#" }) => {
     isLoading,
     isError,
     error,
-  } = useEventsByCategory(categoryId);
+  } = useEventsByCategory(categoryId, [EVENT_STATUS.UPCOMING, EVENT_STATUS.RUNNING]);
 
   if (isLoading) {
     return (
@@ -74,7 +75,7 @@ const EventSection = ({ title, categoryId, link = "#" }) => {
       </div>
     );
   }
-  
+
   const events = eventData?.pageContent || [];
 
   if (events.length === 0) {
@@ -97,7 +98,7 @@ const EventSection = ({ title, categoryId, link = "#" }) => {
 
 const EventCarouselSection = () => {
   const [carouselIndex, setCarouselIndex] = React.useState(0);
-  
+
   // Note: Ensure useEventsByEventIds is implemented in useEventHook if you use it here
   // For now, this assumes it returns a list of events similar to the other hooks
   const {
@@ -124,7 +125,7 @@ const EventCarouselSection = () => {
   };
 
   const events = eventData || [];
-  
+
   const formattedFeaturedEvents = events.map((event) => ({
     id: event.id,
     title: event.name,
@@ -191,7 +192,7 @@ const EventCarouselSection = () => {
 const HomePage = () => {
   return (
     <div className="container mx-auto max-w-7xl px-4 py-8">
-      
+
       <EventCarouselSection />
 
       <EventSection title="This Weekend" categoryId={1} link="/category/1" />
@@ -205,7 +206,7 @@ const HomePage = () => {
           className="h-auto w-full"
         />
       </div>
-      
+
       <EventSection title="Music" categoryId={1} link="/category/1" />
       <EventSection title="Other Events" categoryId={4} link="/category/4" />
 

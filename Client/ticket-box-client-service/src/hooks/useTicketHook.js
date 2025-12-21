@@ -2,7 +2,7 @@ import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import apiClient, { handleApiResponse } from '../api/apiClient';
 import { useAuthStore } from '../store/useAuthStore'
 
-const getTicketsByEventId = async(eventId) => {
+const getTicketsByEventId = async (eventId) => {
   if (!eventId) return Promise.reject(new Error('Event ID is required.'));
   return await handleApiResponse(apiClient.get(`/tickets/event/${eventId}`, {
     params: {
@@ -11,7 +11,7 @@ const getTicketsByEventId = async(eventId) => {
     }
   }));
 };
-const getLowestPriceByEventId = async(eventId) => {
+const getLowestPriceByEventId = async (eventId) => {
   if (!eventId) return Promise.reject(new Error('Event ID is required.'));
   return await handleApiResponse(apiClient.get(`/tickets/lowest-price/${eventId}`));
 };
@@ -27,7 +27,7 @@ const createTicket = async ({ userId, eventId, ticketData }) => {
 export const useGetTicketsByEventId = (eventId) => {
   return useQuery({
     queryKey: ['tickets', eventId],
-    queryFn: async() => await getTicketsByEventId(eventId),
+    queryFn: async () => await getTicketsByEventId(eventId),
     enabled: !!eventId,
     staleTime: 1000 * 60 * 5
   });
@@ -35,7 +35,7 @@ export const useGetTicketsByEventId = (eventId) => {
 export const useLowestTicketPriceByEventId = (eventId) => {
   return useQuery({
     queryKey: ['lowestPrice', eventId],
-    queryFn: async() => await getLowestPriceByEventId(eventId),
+    queryFn: async () => await getLowestPriceByEventId(eventId),
     enabled: !!eventId,
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
     retry: 1,
@@ -47,10 +47,10 @@ export const useCreateTicketMutation = () => {
   const { user } = useAuthStore.getState();
 
   return useMutation({
-    mutationFn: (data) => createTicket({ 
-      userId: user?.id, 
-      eventId: data.eventId, 
-      ticketData: data.ticketData 
+    mutationFn: (data) => createTicket({
+      userId: user?.id,
+      eventId: data.eventId,
+      ticketData: data.ticketData
     }),
     onSuccess: () => {
       // Invalidate queries if necessary, though usually we redirect after creation

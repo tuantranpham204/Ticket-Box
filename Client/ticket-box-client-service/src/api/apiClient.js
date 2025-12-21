@@ -4,9 +4,6 @@ import { useAuthStore } from '../store/useAuthStore';
 // Base URL from the API documentation
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_CORE_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
 // --- Request Interceptor ---
@@ -53,12 +50,12 @@ apiClient.interceptors.response.use(
  * @param {Promise} request - The Axios request promise.
  * @returns {Promise<any>} - The `data` field from the API response.
  */
-export const handleApiResponse = async(request) => {
+export const handleApiResponse = async (request) => {
   try {
     const response = await request;
     // `data` here is the Axios response data, which is our backend's ApiResponse object
-    const apiResponse = response.data; 
-    
+    const apiResponse = response.data;
+
     if (apiResponse.code == 200 && apiResponse.data !== undefined) {
       return apiResponse.data;
     } else {
