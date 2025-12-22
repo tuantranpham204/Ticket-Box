@@ -14,7 +14,7 @@ import java.util.Set;
 @Entity
 @Table(name = "s_order")
 @Builder()
-public class Order{
+public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -24,9 +24,11 @@ public class Order{
     private LocalDateTime purchaseDate;
     private LocalDateTime createDate;
     private LocalDateTime updateDate;
-    @OneToMany(mappedBy = "order", fetch = FetchType.LAZY,cascade = CascadeType.ALL)
+    @Builder.Default
+    @OneToMany(mappedBy = "order", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<OrderTicket> orderTickets = new HashSet<>();
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH,
+            CascadeType.REFRESH })
     @JoinColumn(name = "buyer_id", referencedColumnName = "id")
     private User buyer;
 
@@ -35,7 +37,7 @@ public class Order{
         quantity = 0L;
         for (OrderTicket orderTicket : orderTickets) {
             quantity += orderTicket.getSubQuantity();
-            totalPrice += (double)orderTicket.getSubQuantity() * orderTicket.getTicket().getUnitPrice();
+            totalPrice += (double) orderTicket.getSubQuantity() * orderTicket.getTicket().getUnitPrice();
         }
     }
 

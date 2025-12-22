@@ -14,4 +14,5 @@ public class OrderTicketResponse {
     private String token;
     private String ownerName;
     private RelationshipResponse relationship;
+    private TicketResponse ticket;
 }

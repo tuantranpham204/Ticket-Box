@@ -21,21 +21,24 @@ public class OrderTicket {
     private Long id;
     private Integer status;
     private String token;
-    //@JsonIgnore
-    @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST,CascadeType.MERGE,CascadeType.DETACH,CascadeType.REFRESH})
+    // @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH,
+            CascadeType.REFRESH })
     @JoinColumn(name = "order.id")
     private Order order;
-    @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST,CascadeType.MERGE,CascadeType.DETACH,CascadeType.REFRESH})
+    @ManyToOne(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH,
+            CascadeType.REFRESH })
     @JoinColumn(name = "ticket.id")
     private Ticket ticket;
     private String ownerCID;
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH,
+            CascadeType.REFRESH })
     @JoinColumn(name = "relationship.id")
     private Relationship relationship;
     private Long subQuantity;
 
     public void validateSubQuantity() {
-        if (subQuantity > ticket.getMaxQtyPerOrder() ||  subQuantity < ticket.getMinQtyPerOrder()) {
+        if (subQuantity > ticket.getMaxQtyPerOrder() || subQuantity < ticket.getMinQtyPerOrder()) {
             throw new AppException(ErrorCode.ORDER_TICKET_QUANTITY_INVALID);
         }
     }

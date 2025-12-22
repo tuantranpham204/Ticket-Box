@@ -36,3 +36,5 @@ export const ORDER_TICKET_STATUS = {
   USED: 3, // QR code is scanned
   PENDING: 2,
 };
+
+export const SELF_RELATIONSHIP_ID = 1;

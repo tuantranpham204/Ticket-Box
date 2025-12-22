@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import apiClient, { handleApiResponse } from "../api/apiClient";
 import { useAuthStore } from "../store/useAuthStore";
 import { toast } from "sonner";
+import { SELF_RELATIONSHIP_ID } from "../utils/util";
 
 const getCartItems = async (userId, pageNo = 1, pageSize = 10) => {
     if (!userId) return { pageContent: [], totalPages: 0, totalElements: 0 };
@@ -10,14 +11,53 @@ const getCartItems = async (userId, pageNo = 1, pageSize = 10) => {
     }));
 };
 
-const addToCart = async ({ userId, data }) => {
+const getCart = async (userId) => {
+    if (!userId) return null;
+    return await handleApiResponse(apiClient.get(`/orders/cart/${userId}`));
+};
+
+const createOrderTicket = async ({ userId, data, user }) => {
     // data should be { ticketId, quantity }
-    // Backend requires subQuantity (usually 1 for individual additions or same as quantity)
     const payload = {
-        ...data,
-        subQuantity: 1 // Explicitly setting subQuantity as requested
+        ownerName: user?.fullName || user?.username || "",
+        relationshipId: SELF_RELATIONSHIP_ID,
+        ticketId: data.ticketId,
+        subQuantity: data.quantity || 1
     };
     return await handleApiResponse(apiClient.post(`/order-tickets/create/${userId}`, payload));
+};
+
+const updateOrderTicket = async (userId, orderTicketId, payload) => {
+    return await handleApiResponse(apiClient.put(`/order-tickets/update/${userId}/${orderTicketId}`, payload));
+};
+
+const addToCartLogic = async ({ userId, data, user }) => {
+    // 1. Fetch current cart items (trying to get enough to find duplicate)
+    const cartItemsData = await getCartItems(userId, 1, 100);
+
+    // 2. Check for existing item with same ticketId and SELF_RELATIONSHIP_ID
+    const existingItem = cartItemsData?.pageContent?.find(item =>
+        item.ticket?.id === data.ticketId && item.relationshipId === SELF_RELATIONSHIP_ID
+    );
+
+    if (existingItem) {
+        // 3. Update existing item's quantity
+        const currentQty = existingItem.subQuantity || 0;
+        const addQty = data.quantity || 1;
+        const newQuantity = currentQty + addQty;
+
+        const payload = {
+            ownerName: user?.fullName || user?.username || "",
+            relationshipId: SELF_RELATIONSHIP_ID,
+            ticketId: data.ticketId,
+            subQuantity: newQuantity
+        };
+
+        return await updateOrderTicket(userId, existingItem.id, payload);
+    } else {
+        // 4. Create new item
+        return await createOrderTicket({ userId, data, user });
+    }
 };
 
 const removeFromCart = async (orderTicketId) => {
@@ -37,19 +77,26 @@ export const useCartItems = (pageNo = 1, pageSize = 10) => {
     });
 };
 
+export const useCart = () => {
+    const { user } = useAuthStore();
+    return useQuery({
+        queryKey: ['cart-summary', user?.id],
+        queryFn: async () => await getCart(user?.id),
+        enabled: !!user?.id,
+    });
+};
+
 export const useAddToCartMutation = () => {
     const queryClient = useQueryClient();
     const { user } = useAuthStore();
 
     return useMutation({
-        mutationFn: (data) => addToCart({ userId: user?.id, data }),
+        mutationFn: (data) => addToCartLogic({ userId: user?.id, data, user }),
         onSuccess: () => {
-            toast.success("Added to cart successfully!");
+            toast.success("Cart updated successfully!");
             queryClient.invalidateQueries(['cart', user?.id]);
+            queryClient.invalidateQueries(['cart-summary', user?.id]);
         },
-        onError: (error) => {
-            toast.error(error.message || "Failed to add to cart.");
-        }
     });
 };
 
@@ -62,6 +109,7 @@ export const useRemoveFromCartMutation = () => {
         onSuccess: () => {
             toast.success("Removed from cart.");
             queryClient.invalidateQueries(['cart', user?.id]);
+            queryClient.invalidateQueries(['cart-summary', user?.id]);
         },
         onError: (error) => {
             toast.error(error.message || "Failed to remove from cart.");
@@ -78,7 +126,7 @@ export const usePurchaseCartMutation = () => {
         onSuccess: () => {
             toast.success("Purchase successful!");
             queryClient.invalidateQueries(['cart', user?.id]);
-            // You might want to navigate to history or show a success modal here
+            queryClient.invalidateQueries(['cart-summary', user?.id]);
         },
         onError: (error) => {
             toast.error(error.message || "Purchase failed.");

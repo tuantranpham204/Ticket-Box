@@ -1,6 +1,5 @@
 package com.example.ticketboxcoreservice.service;
 
-import com.example.ticketboxcoreservice.enumf.Constants;
 import com.example.ticketboxcoreservice.enumf.ErrorCode;
 import com.example.ticketboxcoreservice.exception.AppException;
 import com.example.ticketboxcoreservice.exception.ResourceNotFoundException;
@@ -8,7 +7,6 @@ import com.example.ticketboxcoreservice.model.dto.request.OrderTicketQRCode;
 import com.example.ticketboxcoreservice.model.dto.request.OrderTicketRequest;
 import com.example.ticketboxcoreservice.model.dto.response.CustomPage;
 import com.example.ticketboxcoreservice.model.dto.response.MessageResponse;
-import com.example.ticketboxcoreservice.model.dto.response.OrderResponse;
 import com.example.ticketboxcoreservice.model.dto.response.OrderTicketResponse;
 import com.example.ticketboxcoreservice.model.entity.Order;
 import com.example.ticketboxcoreservice.model.entity.OrderTicket;
@@ -16,8 +14,8 @@ import com.example.ticketboxcoreservice.repository.OrderRepository;
 import com.example.ticketboxcoreservice.repository.OrderTicketRepository;
 import com.example.ticketboxcoreservice.repository.RelationshipRepository;
 import com.example.ticketboxcoreservice.repository.TicketRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.aspectj.weaver.ast.Or;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -41,81 +39,91 @@ public class OrderTicketService {
     private final TicketRepository ticketRepository;
     private final RelationshipRepository relationshipRepository;
 
-
+    @Transactional
     public OrderTicketResponse createOrderTicket(Long userId, OrderTicketRequest orderTicketRequest) {
         OrderTicket orderTicket = modelMapper.map(orderTicketRequest, OrderTicket.class);
         Order cart = getCartByUserIdFunction(userId);
         orderTicket.setOrder(cart);
         orderTicket.setTicket(
                 ticketRepository.findById(orderTicketRequest.getTicketId()).orElseThrow(
-                () -> new ResourceNotFoundException("ticket", "ticket id", orderTicketRequest.getTicketId())
-        ));
+                        () -> new ResourceNotFoundException("ticket", "ticket id", orderTicketRequest.getTicketId())));
         orderTicket.validateSubQuantity();
-        orderTicket.setStatus(Constants.ORDER_TICKET_STATUS_INACTIVE);
+        orderTicket.setStatus(com.example.ticketboxcoreservice.enumf.Constants.ORDER_TICKET_STATUS_INACTIVE);
         orderTicket.setRelationship(
                 relationshipRepository.findById(orderTicketRequest.getRelationshipId()).orElseThrow(
-                () -> new ResourceNotFoundException("ticket", "ticket id", orderTicketRequest.getTicketId())
-        ));
-        orderTicket.setToken(generateOrderTicketToken(orderTicket));
+                        () -> new ResourceNotFoundException("relationship", "relationship id",
+                                orderTicketRequest.getRelationshipId())));
         return modelMapper.map(orderTicketRepository.save(orderTicket), OrderTicketResponse.class);
     }
-    public OrderTicketResponse updateOrderTicket(Long userId, Long orderTicketId, OrderTicketRequest orderTicketRequest) {
+
+    @Transactional
+    public OrderTicketResponse updateOrderTicket(Long userId, Long orderTicketId,
+            OrderTicketRequest orderTicketRequest) {
         Order cart = getCartByUserIdFunction(userId);
         boolean isOrderTicketInCart = false;
         for (OrderTicket orderTicket : cart.getOrderTickets()) {
-            if (orderTicketId.equals(orderTicket.getId())) isOrderTicketInCart = true;
+            if (orderTicketId.equals(orderTicket.getId()))
+                isOrderTicketInCart = true;
         }
-        if (!isOrderTicketInCart) {throw new  AppException(ErrorCode.ORDER_TICKET_NOT_INSIDE_CART);}
+        if (!isOrderTicketInCart) {
+            throw new AppException(ErrorCode.ORDER_TICKET_NOT_INSIDE_CART);
+        }
         OrderTicket orderTicket = orderTicketRepository.findById(orderTicketId).orElseThrow(
-                () -> new ResourceNotFoundException("ticket", "ticket id", orderTicketId)
-        );
-        if (!orderTicket.getStatus().equals(Constants.ORDER_TICKET_STATUS_INACTIVE)) {
-            throw new  AppException(ErrorCode.ONLY_INACTIVE_ORDER_TICKETS_IS_UPDATABLE_AND_REMOVABLE);
+                () -> new ResourceNotFoundException("ticket", "ticket id", orderTicketId));
+        if (!orderTicket.getStatus()
+                .equals(com.example.ticketboxcoreservice.enumf.Constants.ORDER_TICKET_STATUS_INACTIVE)) {
+            throw new AppException(ErrorCode.ONLY_INACTIVE_ORDER_TICKETS_IS_UPDATABLE_AND_REMOVABLE);
         }
         orderTicket.validateSubQuantity();
         OrderTicket newOrderTicket = modelMapper.map(orderTicketRequest, OrderTicket.class);
         orderTicket.setRelationship(
                 relationshipRepository.findById(orderTicketRequest.getRelationshipId()).orElseThrow(
-                        () -> new ResourceNotFoundException("ticket", "ticket id", orderTicketRequest.getTicketId())
-                ));
+                        () -> new ResourceNotFoundException("ticket", "ticket id", orderTicketRequest.getTicketId())));
         newOrderTicket.setId(orderTicket.getId());
-        return  modelMapper.map(orderTicketRepository.save(newOrderTicket), OrderTicketResponse.class);
+        return modelMapper.map(orderTicketRepository.save(newOrderTicket), OrderTicketResponse.class);
     }
 
+    @Transactional
     public MessageResponse deleteOrderTicket(Long orderTicketId) {
-        if (orderTicketRepository.getOrderTicketStatusByOrderTicketId(orderTicketId) != Constants.ORDER_TICKET_STATUS_INACTIVE) {
+        if (orderTicketRepository.getOrderTicketStatusByOrderTicketId(
+                orderTicketId) != com.example.ticketboxcoreservice.enumf.Constants.ORDER_TICKET_STATUS_INACTIVE) {
             throw new AppException(ErrorCode.ONLY_INACTIVE_ORDER_TICKETS_IS_UPDATABLE_AND_REMOVABLE);
         }
-        if (orderTicketRepository.getOrderStatusByOrderTicketId(orderTicketId) != Constants.ORDER_STATUS_NOT_PURCHASED) {
+        if (orderTicketRepository.getOrderStatusByOrderTicketId(
+                orderTicketId) != com.example.ticketboxcoreservice.enumf.Constants.ORDER_STATUS_NOT_PURCHASED) {
             throw new AppException(ErrorCode.ONLY_CART_IS_UPDATABLE);
         }
         orderTicketRepository.deleteById(orderTicketId);
         return new MessageResponse("Order ticket with id " + orderTicketId + " is deleted successfully!");
     }
+
     // activate order ticket when its order is purchased
     public void activatePurchasedOrderTicket(OrderTicket orderTicket) {
-        orderTicket.setStatus(Constants.ORDER_TICKET_STATUS_ACTIVE);
+        orderTicket.setStatus(com.example.ticketboxcoreservice.enumf.Constants.ORDER_TICKET_STATUS_USED);
         orderTicket.setToken(generateOrderTicketToken(orderTicket));
     }
+
     // /api/order-ticket/qr/
+    @Transactional
     public OrderTicket validateOrderTicketQRCode(OrderTicketQRCode orderTicketQRCode) {
         try {
             String token = qrCodeService.decodeQrCode(orderTicketQRCode.getQrCode());
             if (jwtService.isOrderTicketTokenExpired(token)) {
                 throw new AppException(ErrorCode.ORDER_TICKET_EXPIRED);
             }
-            OrderTicket scannedOrderTicket  = jwtService.extractClaimFromOrderTicketToken(token,
-                    claims -> claims.get("orderTicket", OrderTicket.class)
-            );
+            OrderTicket scannedOrderTicket = jwtService.extractClaimFromOrderTicketToken(token,
+                    claims -> claims.get("orderTicket", OrderTicket.class));
             OrderTicket orderTicket = orderTicketRepository.findById(scannedOrderTicket.getId())
-                    .orElseThrow(() -> new ResourceNotFoundException("orderTicket", "orderTicketId", scannedOrderTicket.getId()));
-            if (!Objects.equals(orderTicket.getStatus(), Constants.ORDER_TICKET_STATUS_ACTIVE)) {
+                    .orElseThrow(() -> new ResourceNotFoundException("orderTicket", "orderTicketId",
+                            scannedOrderTicket.getId()));
+            if (!Objects.equals(orderTicket.getStatus(),
+                    com.example.ticketboxcoreservice.enumf.Constants.ORDER_TICKET_STATUS_ACTIVE)) {
                 throw new AppException(ErrorCode.ORDER_TICKET_USED);
             }
             if (!orderTicket.equals(scannedOrderTicket)) {
                 throw new AppException(ErrorCode.ORDER_TICKET_UNMATCHED);
             }
-            orderTicket.setStatus(Constants.ORDER_TICKET_STATUS_PENDING);
+            orderTicket.setStatus(com.example.ticketboxcoreservice.enumf.Constants.ORDER_TICKET_STATUS_PENDING);
             return orderTicketRepository.save(orderTicket);
         } catch (Exception e) {
             throw new AppException(ErrorCode.INTERNAL_ERROR);
@@ -123,17 +131,19 @@ public class OrderTicketService {
 
     }
 
+    @Transactional
     public MessageResponse confirmOrder(OrderTicket orderTicket) {
-        orderTicket.setStatus(Constants.ORDER_TICKET_STATUS_USED);
+        orderTicket.setStatus(com.example.ticketboxcoreservice.enumf.Constants.ORDER_TICKET_STATUS_USED);
         orderTicketRepository.save(orderTicket);
         return new MessageResponse("Order ticket with id " + orderTicket.getId() + " is confirmed!");
     }
 
+    @Transactional
     public CustomPage<OrderTicketResponse> getCartTicketsByUserId(Long userId, Pageable pageable) {
-        Order cart =  getCartByUserIdFunction(userId);
+        Order cart = getCartByUserIdFunction(userId);
         Page<OrderTicket> cartTickets = orderTicketRepository.findByOrderId(cart.getId(), pageable);
         return CustomPage.<OrderTicketResponse>builder()
-                .pageNo(cartTickets.getNumber()+1)
+                .pageNo(cartTickets.getNumber() + 1)
                 .pageSize(cartTickets.getSize())
                 .pageContent(cartTickets.getContent().stream()
                         .map(cartTicket -> modelMapper.map(cartTicket, OrderTicketResponse.class))
@@ -141,18 +151,17 @@ public class OrderTicketService {
                 .build();
     }
 
+    @Transactional
     public CustomPage<OrderTicketResponse> getOrderTicketsByOrderId(Long orderId, Pageable pageable) {
         Page<OrderTicket> orderTickets = orderTicketRepository.findByOrderId(orderId, pageable);
         return CustomPage.<OrderTicketResponse>builder()
-                .pageNo(orderTickets.getNumber()+1)
+                .pageNo(orderTickets.getNumber() + 1)
                 .pageSize(orderTickets.getSize())
                 .pageContent(orderTickets.getContent().stream()
                         .map(orderTicket -> modelMapper.map(orderTicket, OrderTicketResponse.class))
                         .collect(Collectors.toList()))
                 .build();
     }
-
-
 
     private String generateOrderTicketToken(OrderTicket orderTicket) {
         Map<String, Object> claims = new HashMap<>();
@@ -164,8 +173,10 @@ public class OrderTicketService {
     }
 
     private Order getCartByUserIdFunction(Long userId) {
-        List<Order> orders = orderRepository.findOrderByUserIdAndPurchasedAsList(userId, Constants.ORDER_STATUS_NOT_PURCHASED);
-        if (orders.size() != 1) throw new AppException(ErrorCode.INVALID_NUMBER_OF_CARTS);
+        List<Order> orders = orderRepository.findOrderByUserIdAndPurchasedAsList(userId,
+                com.example.ticketboxcoreservice.enumf.Constants.ORDER_STATUS_NOT_PURCHASED);
+        if (orders.size() != 1)
+            throw new AppException(ErrorCode.INVALID_NUMBER_OF_CARTS);
         return orders.get(0);
     }
 
