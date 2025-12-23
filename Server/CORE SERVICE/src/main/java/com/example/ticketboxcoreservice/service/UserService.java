@@ -4,7 +4,9 @@ import com.example.ticketboxcoreservice.enumf.Constants;
 import com.example.ticketboxcoreservice.enumf.ErrorCode;
 import com.example.ticketboxcoreservice.exception.AppException;
 import com.example.ticketboxcoreservice.exception.ResourceNotFoundException;
+import com.example.ticketboxcoreservice.model.dto.request.ChangePasswordRequest;
 import com.example.ticketboxcoreservice.model.dto.request.ImageRequest;
+import com.example.ticketboxcoreservice.model.dto.request.UserProfileRequest;
 import com.example.ticketboxcoreservice.model.dto.request.UserRequest;
 import com.example.ticketboxcoreservice.model.dto.response.CustomPage;
 import com.example.ticketboxcoreservice.model.dto.response.MessageResponse;
@@ -32,30 +34,34 @@ public class UserService {
     private final ModelMapper modelMapper;
     private final PasswordEncoder passwordEncoder;
     private final ImageService imageService;
-    
+
     public UserResponse getUserById(Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
-        return  modelMapper.map(user, UserResponse.class);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+        return modelMapper.map(user, UserResponse.class);
     }
+
     public CustomPage<UserResponse> getAllUser(Pageable pageable) {
         Page<User> page = userRepository.findAll(pageable);
         return CustomPage.<UserResponse>builder()
                 .pageNo(page.getNumber() + 1)
                 .pageSize(page.getSize())
                 .totalPages(page.getTotalPages())
-                .pageContent(page.getContent().stream().map(user->modelMapper.map(user, UserResponse.class)).toList())
+                .pageContent(page.getContent().stream().map(user -> modelMapper.map(user, UserResponse.class)).toList())
                 .build();
 
     }
-    public UserResponse updateUser(Long userId, UserRequest request) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
-        if (!request.getUsername().equals(user.getUsername())){
-            throw new AppException(ErrorCode.USERNAME_CAN_NOT_BE_CHANGED);
-        }
-        modelMapper.map(request,user);
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        return modelMapper.map(userRepository.save(user),UserResponse.class);
+
+    public UserResponse updateUserProfile(Long userId, UserProfileRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+        user.setFullName(request.getFullName());
+        user.setEmail(request.getEmail());
+
+        modelMapper.map(request, user);
+        return modelMapper.map(userRepository.save(user), UserResponse.class);
     }
+
     public UserResponse updateAvatarByUserId(Long id, ImageRequest request) {
         User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
         Long avatarImgId = user.getAvatar().getId();
@@ -63,20 +69,36 @@ public class UserService {
         try {
             if (avatarImgId == Constants.DEFAULT_AVATAR_IMG_ID) {
                 updatedAvatar = modelMapper.map(imageService.uploadImage(request), Image.class);
-            } else  updatedAvatar = modelMapper.map(imageService.updateImageByImageId(avatarImgId, request), Image.class);
+            } else
+                updatedAvatar = modelMapper.map(imageService.updateImageByImageId(avatarImgId, request), Image.class);
         } catch (IOException e) {
             throw new IllegalArgumentException(e.getMessage());
-        }         user.setAvatar(updatedAvatar);
+        }
+        user.setAvatar(updatedAvatar);
         return modelMapper.map(userRepository.save(user), UserResponse.class);
     }
-    public MessageResponse updatePasswordByUserId(Long id, String updatedPassword) {
-        User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
-        user.setPassword(passwordEncoder.encode(updatedPassword));
+
+    public MessageResponse changePassword(Long userId, ChangePasswordRequest request) {
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new AppException(ErrorCode.CONFIRM_PASSWORD_NOT_MATCHED);
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new AppException(ErrorCode.PASSWORD_NOT_MATCHED);
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
-        return new MessageResponse("User with the username + " + user.getUsername() + " + has his/her password updated successfully!");
+
+        return new MessageResponse("Password changed successfully for user: " + user.getUsername());
     }
+
     public MessageResponse updateUserToApprover(Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
         for (Role role : user.getRoles()) {
             if (role.getName() == "ROLE_APPROVER") {
                 throw new AppException(ErrorCode.USER_IS_ALREADY_APPROVER);
@@ -85,8 +107,7 @@ public class UserService {
             }
         }
         Role role = roleRepository.findByName("ROLE_APPROVER").orElseThrow(
-                () -> new ResourceNotFoundException("Role", "role name", "ROLE_APPROVER")
-        );
+                () -> new ResourceNotFoundException("Role", "role name", "ROLE_APPROVER"));
 
         Set<Role> roles = user.getRoles();
         roles.add(role);
@@ -98,8 +119,7 @@ public class UserService {
 
     public boolean isApproverByUser(User user) {
         Role ApproverRole = roleRepository.findByName("ROLE_APPROVER").orElseThrow(
-                () -> new ResourceNotFoundException("role", "role name", "ROLE_APPROVER")
-        );
+                () -> new ResourceNotFoundException("role", "role name", "ROLE_APPROVER"));
         return user.getRoles().contains(ApproverRole);
     }
 }

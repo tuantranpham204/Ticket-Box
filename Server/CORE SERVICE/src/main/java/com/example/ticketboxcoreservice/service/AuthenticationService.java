@@ -109,6 +109,10 @@ public class AuthenticationService {
         //set default cart for new user
         Order order = new Order();
         order.setBuyer(user);
+        order.setCreateDate(LocalDateTime.now());
+        order.setQuantity(0l);
+        order.setTotalPrice(0d);
+        order.setStatus(Constants.ORDER_STATUS_NOT_PURCHASED);
         order.setUpdateDate(LocalDateTime.now());
         orderRepository.save(order);
 

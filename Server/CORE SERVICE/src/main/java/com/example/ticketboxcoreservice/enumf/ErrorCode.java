@@ -21,26 +21,37 @@ public enum ErrorCode {
     USER_IS_ALREADY_APPROVER(400, "User is already an approver", HttpStatus.BAD_REQUEST),
     ADMIN_CANNOT_REGISTER_APPROVER(400, "As an admin, user cannot register to be an approver", HttpStatus.BAD_REQUEST),
 
-    NON_APPROVERS_CANNOT_APPROVE_OR_DECLINE_EVENTS(400, "Only approvers can make approval or declination to events", HttpStatus.BAD_REQUEST),
+    NON_APPROVERS_CANNOT_APPROVE_OR_DECLINE_EVENTS(400, "Only approvers can make approval or declination to events",
+            HttpStatus.BAD_REQUEST),
     ONLY_HOST_CAN_UPDATE_EVENT(400, "Only creator of the event can make changes to it", HttpStatus.BAD_REQUEST),
     ONLY_PENDING_EVENT_IS_UPDATABLE(400, "Only pending events can be made changes", HttpStatus.BAD_REQUEST),
-    ONLY_HOST_CAN_UPDATE_TICKET(400, "Only creator of the event can make changes to its tickets", HttpStatus.BAD_REQUEST),
+    ONLY_HOST_CAN_UPDATE_TICKET(400, "Only creator of the event can make changes to its tickets",
+            HttpStatus.BAD_REQUEST),
     ONLY_PENDING_TICKET_IS_UPDATABLE(400, "Only pending ticket can be made changes", HttpStatus.BAD_REQUEST),
-    ONLY_APPROVERS_OF_EVENTS_CAN_APPROVE_THEIR_TICKETS(400, "Only approver of the event can make approval or declination to its ticket",HttpStatus.BAD_REQUEST),
-    SOLD_TICKET_CANNOT_EXCEED_ITS_CAPACITY(400, "Number of sold ticket cannot exceed its capacity", HttpStatus.BAD_REQUEST),
+    ONLY_APPROVERS_OF_EVENTS_CAN_APPROVE_THEIR_TICKETS(400,
+            "Only approver of the event can make approval or declination to its ticket", HttpStatus.BAD_REQUEST),
+    SOLD_TICKET_CANNOT_EXCEED_ITS_CAPACITY(400, "Number of sold ticket cannot exceed its capacity",
+            HttpStatus.BAD_REQUEST),
     ONLY_CART_IS_UPDATABLE(400, "Only carts can be made changes", HttpStatus.BAD_REQUEST),
-    ONLY_INACTIVE_ORDER_TICKETS_IS_UPDATABLE_AND_REMOVABLE(400, "Only inactive order tickets are updatable or removable", HttpStatus.BAD_REQUEST),
+    ONLY_INACTIVE_ORDER_TICKETS_IS_UPDATABLE_AND_REMOVABLE(400,
+            "Only inactive order tickets are updatable or removable", HttpStatus.BAD_REQUEST),
 
     INVALID_NUMBER_OF_CARTS(400, "Only 1 cart per person allowed", HttpStatus.BAD_REQUEST),
 
     ORDER_TICKET_EXPIRED(400, "Order ticket expired.", HttpStatus.BAD_REQUEST),
     ORDER_TICKET_USED(400, "Order ticket used.", HttpStatus.BAD_REQUEST),
-    ORDER_TICKET_UNMATCHED(400, "Validation failed: Scanned token does not match database token.", HttpStatus.BAD_REQUEST),
-    ORDER_TICKET_QUANTITY_INVALID(400, "Order ticket quantity cannot exceeds ticket maximum quantity nor be under the minimum one.", HttpStatus.BAD_REQUEST),
+    ORDER_TICKET_UNMATCHED(400, "Validation failed: Scanned token does not match database token.",
+            HttpStatus.BAD_REQUEST),
+    ORDER_TICKET_QUANTITY_INVALID(400,
+            "Order ticket quantity cannot exceeds ticket maximum quantity nor be under the minimum one.",
+            HttpStatus.BAD_REQUEST),
     ORDER_TICKET_NOT_INSIDE_CART(400, "Cart does not contain the given order ticket.", HttpStatus.BAD_REQUEST),
 
     ONLY_PDF_ALLOWED(400, "Only PDF files are allowed!", HttpStatus.BAD_REQUEST),
+    PASSWORD_NOT_MATCHED(400, "Current password is not correct", HttpStatus.BAD_REQUEST),
+    CONFIRM_PASSWORD_NOT_MATCHED(400, "Confirm password does not match new password", HttpStatus.BAD_REQUEST),
     ;
+
     private int code;
     private String message;
     private HttpStatus status;

@@ -10,10 +10,11 @@ export const useAuthStore = create(
     (set) => ({
       user: null,
       accessToken: null,
-      
+
       login: (user, accessToken) => set({ user, accessToken }),
       logout: () => set({ user: null, accessToken: null }),
-      
+      setUser: (user) => set({ user }),
+
       hasRole: (roleName) => {
         const { user } = useAuthStore.getState();
         return user?.roles?.some(role => role.name === roleName) || false;

@@ -17,6 +17,7 @@ const SearchResultsPage = React.lazy(() => import("./pages/searchResultsPage"));
 const CartPage = React.lazy(() => import("./pages/cartPage"));
 const OrderHistoryPage = React.lazy(() => import("./pages/orderHistoryPage"));
 const CategoryPage = React.lazy(() => import("./pages/categoryPage"));
+const UserProfilePage = React.lazy(() => import("./pages/userProfilePage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -47,7 +48,7 @@ export default function App() {
               <Route path="search" element={<SearchResultsPage />} />
               <Route path="category/:categoryId" element={<CategoryPage />} />
 
-              {/* --- Protected Routes (Example) --- */}
+              {/* --- Protected Routes --- */}
               <Route
                 path="/create-event"
                 element={
@@ -77,6 +78,12 @@ export default function App() {
               <Route path="/order-history" element={
                 <RoleBasedRoute roles={['ROLE_USER', 'ROLE_APPROVER', 'ROLE_ADMIN']}>
                   <OrderHistoryPage />
+                </RoleBasedRoute>
+              } />
+
+              <Route path="/profile" element={
+                <RoleBasedRoute roles={['ROLE_USER', 'ROLE_APPROVER', 'ROLE_ADMIN']}>
+                  <UserProfilePage />
                 </RoleBasedRoute>
               } />
 

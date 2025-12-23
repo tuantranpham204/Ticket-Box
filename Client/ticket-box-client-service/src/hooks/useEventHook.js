@@ -73,7 +73,7 @@ const createEvent = async ({ creatorUserId, eventData }) => {
 const uploadEventFiles = async ({ eventId, formData }) => {
   // Sends files (images, PDFs) to the specific upload endpoint
   return await handleApiResponse(
-    apiClient.post(`/events/upload/${eventId}`, formData)
+    apiClient.put(`/events/upload/${eventId}`, formData)
   );
 };
 

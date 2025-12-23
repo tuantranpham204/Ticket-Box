@@ -12,6 +12,6 @@ public interface TicketRepository extends JpaRepository<Ticket,Long> {
     @Query("SELECT t FROM Ticket t WHERE t.event.id=:eventId")
     Page<Ticket> findByEventId(Long eventId, Pageable pageable);
 
-    @Query("SELECT t.unitPrice FROM Ticket t WHERE t.event.id=:eventId ORDER BY t.unitPrice DESC LIMIT 1")
+    @Query("SELECT t.unitPrice FROM Ticket t WHERE t.event.id=:eventId ORDER BY t.unitPrice LIMIT 1")
     List<Double> getLowestTicketPriceByEventId(Long eventId);
 }

@@ -1,8 +1,9 @@
 package com.example.ticketboxcoreservice.controller;
 
-
+import com.example.ticketboxcoreservice.model.dto.request.ChangePasswordRequest;
 import com.example.ticketboxcoreservice.model.dto.request.ImageRequest;
 import com.example.ticketboxcoreservice.model.dto.request.TicketRequest;
+import com.example.ticketboxcoreservice.model.dto.request.UserProfileRequest;
 import com.example.ticketboxcoreservice.model.dto.request.UserRequest;
 import com.example.ticketboxcoreservice.model.dto.response.ApiResponse;
 import com.example.ticketboxcoreservice.service.UserService;
@@ -15,21 +16,21 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
-@Tag(name="User")
+@Tag(name = "User")
 public class UserController {
     private final UserService userService;
 
     @Operation(summary = "get user by user id")
     @GetMapping("/get/{userId}")
     public ResponseEntity<ApiResponse> getUserById(
-            @PathVariable("userId") Long userId
-            ) {
+            @PathVariable("userId") Long userId) {
         ApiResponse response = ApiResponse.succeed(userService.getUserById(userId));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -37,8 +38,7 @@ public class UserController {
     @Operation(summary = "update user to approver")
     @PutMapping("/to-approver/{userId}")
     public ResponseEntity<ApiResponse> toApprover(
-            @PathVariable("userId") Long userId
-            ) {
+            @PathVariable("userId") Long userId) {
         ApiResponse response = ApiResponse.succeed(userService.updateUserToApprover(userId));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -58,17 +58,26 @@ public class UserController {
     @PutMapping("/update/{userId}")
     public ResponseEntity<ApiResponse> updateUser(
             @PathVariable("userId") Long userId,
-            @RequestBody @Valid UserRequest userRequest
-    ) {
-        ApiResponse response = ApiResponse.succeed(userService.updateUser(userId, userRequest));
+            @RequestBody @Valid UserProfileRequest userRequest) {
+        ApiResponse response = ApiResponse.succeed(userService.updateUserProfile(userId, userRequest));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
     @Operation(summary = "update user avatar")
-    @PutMapping("/avatar/{userId}")
+    @PutMapping(path = "/avatar/{userId}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<ApiResponse> updateUserAvatar(
             @PathVariable("userId") Long userId,
-            @RequestBody @Valid ImageRequest request) {
+            @ModelAttribute @Valid ImageRequest request) {
         ApiResponse response = ApiResponse.succeed(userService.updateAvatarByUserId(userId, request));
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Operation(summary = "change user password")
+    @PutMapping("/change-password/{userId}")
+    public ResponseEntity<ApiResponse> changePassword(
+            @PathVariable("userId") Long userId,
+            @RequestBody @Valid ChangePasswordRequest request) {
+        ApiResponse response = ApiResponse.succeed(userService.changePassword(userId, request));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

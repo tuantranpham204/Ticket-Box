@@ -88,7 +88,6 @@ public class OrderTicketService {
     @Transactional
     public MessageResponse deleteOrderTicket(Long orderTicketId) {
 
-
         if (orderTicketRepository.getOrderTicketStatusByOrderTicketId(
                 orderTicketId) != com.example.ticketboxcoreservice.enumf.Constants.ORDER_TICKET_STATUS_INACTIVE) {
             throw new AppException(ErrorCode.ONLY_INACTIVE_ORDER_TICKETS_IS_UPDATABLE_AND_REMOVABLE);
@@ -99,8 +98,7 @@ public class OrderTicketService {
         }
 
         Order cart = orderRepository.findByOrderTicketId(orderTicketId).orElseThrow(
-                () -> new ResourceNotFoundException("order", "order ticket id", orderTicketId)
-        );
+                () -> new ResourceNotFoundException("order", "order ticket id", orderTicketId));
         OrderTicket orderTicket = orderTicketRepository.findById(orderTicketId).orElseThrow(
                 () -> new ResourceNotFoundException("ticket", "ticket id", orderTicketId));
 

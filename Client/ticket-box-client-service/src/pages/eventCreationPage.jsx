@@ -26,7 +26,7 @@ import { CAT, EVENT_STATUS, TICKET_STATUS } from "../utils/util";
 const EventCreationPage = () => {
   const navigate = useNavigate();
   const [isTicketsOpen, setIsTicketsOpen] = useState(true);
-  
+
   // --- Preview States (Middleware for Visuals) ---
   const [imgPreview, setImgPreview] = useState(null);
   const [bannerPreview, setBannerPreview] = useState(null);
@@ -63,7 +63,7 @@ const EventCreationPage = () => {
   // --- Watch Fields for Logic & Previews ---
   const isOnline = watch("online");
   const isOffline = isOnline === "false";
-  
+
   // Watch file inputs to trigger UI updates
   const watchedImg = watch("img");
   const watchedBanner = watch("banner");
@@ -91,14 +91,20 @@ const EventCreationPage = () => {
     }
   }, [watchedBanner]);
 
-  const onSubmit = async(data) => {
+  const onSubmit = async (data) => {
     try {
       // 1. Files
-      const formData = new FormData();
-      if (data.img?.[0]) formData.append("img", data.img[0]);
-      if (data.banner?.[0]) formData.append("banner", data.banner[0]);
-      if (data.contract?.[0]) formData.append("contract", data.contract[0]);
-      if (data.info?.[0]) formData.append("info", data.info[0]);
+      let formData = null;
+      const fileFields = ["img", "banner", "contract", "info"];
+      const hasFiles = fileFields.some(field => data[field]?.[0]);
+
+      if (hasFiles) {
+        formData = new FormData();
+        if (data.img?.[0]) formData.append("img", data.img[0]);
+        if (data.banner?.[0]) formData.append("banner", data.banner[0]);
+        if (data.contract?.[0]) formData.append("contract", data.contract[0]);
+        if (data.info?.[0]) formData.append("info", data.info[0]);
+      }
 
       // 2. Address
       let addressJsonString = null;
@@ -367,10 +373,10 @@ const EventCreationPage = () => {
                 <label className="group flex h-40 w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-gray-600 hover:border-blue-500 hover:bg-gray-750 relative">
                   {imgPreview ? (
                     // Show Preview
-                    <img 
-                      src={imgPreview} 
-                      alt="Thumbnail Preview" 
-                      className="h-full w-full object-cover transition-opacity group-hover:opacity-75" 
+                    <img
+                      src={imgPreview}
+                      alt="Thumbnail Preview"
+                      className="h-full w-full object-cover transition-opacity group-hover:opacity-75"
                     />
                   ) : (
                     // Show Placeholder
@@ -398,10 +404,10 @@ const EventCreationPage = () => {
                 </label>
                 <label className="group flex h-40 w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-gray-600 hover:border-blue-500 hover:bg-gray-750 relative">
                   {bannerPreview ? (
-                    <img 
-                      src={bannerPreview} 
-                      alt="Banner Preview" 
-                      className="h-full w-full object-cover transition-opacity group-hover:opacity-75" 
+                    <img
+                      src={bannerPreview}
+                      alt="Banner Preview"
+                      className="h-full w-full object-cover transition-opacity group-hover:opacity-75"
                     />
                   ) : (
                     <div className="flex flex-col items-center justify-center pb-6 pt-5">

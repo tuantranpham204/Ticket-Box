@@ -1,7 +1,9 @@
 package com.example.ticketboxcoreservice.service;
 
+import com.example.ticketboxcoreservice.enumf.Constants;
 import com.example.ticketboxcoreservice.enumf.ErrorCode;
 import com.example.ticketboxcoreservice.exception.AppException;
+import com.example.ticketboxcoreservice.exception.ResourceNotFoundException;
 import com.example.ticketboxcoreservice.model.dto.response.CustomPage;
 import com.example.ticketboxcoreservice.model.dto.response.MessageResponse;
 import com.example.ticketboxcoreservice.model.dto.response.OrderResponse;
@@ -48,7 +50,19 @@ public class OrderService {
         for (OrderTicket orderTicket : cart.getOrderTickets()) {
             orderTicketService.activatePurchasedOrderTicket(orderTicket);
         }
-        orderRepository.save(cart);
+
+        // create new empty cart for the user
+        Order newCart = new Order();
+
+        newCart.setBuyer(userRepository.findById(userId).orElseThrow(
+                () -> new ResourceNotFoundException("user", "user id", "user")));
+        newCart.setCreateDate(LocalDateTime.now());
+        newCart.setQuantity(0l);
+        newCart.setTotalPrice(0d);
+        newCart.setStatus(Constants.ORDER_STATUS_NOT_PURCHASED);
+        newCart.setUpdateDate(LocalDateTime.now());
+
+        orderRepository.save(newCart);
         return new MessageResponse("Cart of user with id " + userId + " has been purchased successfully");
     }
 
@@ -64,7 +78,6 @@ public class OrderService {
                         .collect(Collectors.toList()))
                 .build();
     }
-
 
     private Order getCartByUserIdFunction(Long userId) {
         List<Order> orders = orderRepository.findOrderByUserIdAndPurchasedAsList(userId,

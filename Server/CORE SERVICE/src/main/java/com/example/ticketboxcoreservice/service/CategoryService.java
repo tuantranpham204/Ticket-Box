@@ -1,4 +1,4 @@
-package com.example.eventboxcoreservice.service;
+package com.example.ticketboxcoreservice.service;
 
 import com.example.ticketboxcoreservice.enumf.Constants;
 import com.example.ticketboxcoreservice.exception.ResourceNotFoundException;
