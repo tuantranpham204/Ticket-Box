@@ -1,19 +1,56 @@
 import React, { useState } from 'react';
-import { useCartItems, useCart, useRemoveFromCartMutation, usePurchaseCartMutation } from '../hooks/useCartHook';
-import { Loader2, Trash2, ShoppingCart, CreditCard, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useCartItems, useCart, useRemoveFromCartMutation, usePurchaseCartMutation, useUpdateOrderTicketMutation } from '../hooks/useCartHook';
+import { Loader2, Trash2, ShoppingCart, CreditCard, ChevronLeft, ChevronRight, Plus, Minus, ArrowUpDown, ArrowUp, ArrowDown, Save } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { SELF_RELATIONSHIP_ID } from '../utils/util';
+import { useAuthStore } from '../store/useAuthStore';
+import { toast } from 'sonner';
 
 const CartPage = () => {
     const [pageNo, setPageNo] = useState(1);
-    const pageSize = 10;
-    const { data: cartItemsData, isLoading, isError, error } = useCartItems(pageNo, pageSize);
+    const [pageSize, setPageSize] = useState(10);
+    const [sortBy, setSortBy] = useState('id');
+    const [sortOrder, setSortOrder] = useState('desc');
+    const [localQuantities, setLocalQuantities] = useState({}); // { orderTicketId: value }
+
+    const { data: cartItemsData, isLoading, isError, error } = useCartItems(pageNo, pageSize, sortBy, sortOrder);
     const { data: cart } = useCart();
+    // const { user } = useAuthStore();
     const removeMutation = useRemoveFromCartMutation();
     const purchaseMutation = usePurchaseCartMutation();
+    const updateMutation = useUpdateOrderTicketMutation();
 
     const cartItems = cartItemsData?.pageContent || [];
     const totalPages = cartItemsData?.totalPages || 0;
     const totalElements = cartItemsData?.totalElements || 0;
+
+    const handleQuantityChange = (itemId, newQty) => {
+        const qty = parseInt(newQty);
+        if (isNaN(qty) || qty < 1) return;
+        setLocalQuantities(prev => ({
+            ...prev,
+            [itemId]: qty
+        }));
+    };
+
+    const handleSaveQuantity = (item) => {
+        const newQty = localQuantities[item.id];
+        if (!newQty || newQty === item.subQuantity) return;
+
+        updateMutation.mutate({
+            orderTicketId: item.id,
+            data: { ...item, subQuantity: newQty }
+        }, {
+            onSuccess: () => {
+                handleQuantityChange(item.id, localQuantities[item.id]);
+                toast.success("Quantity updated!");
+            }
+        });
+    };
+
+    const getDisplayQuantity = (item) => {
+        return localQuantities[item.id] !== undefined ? localQuantities[item.id] : (item.subQuantity || 1);
+    };
 
     const handleRemove = (id) => {
         if (window.confirm('Are you sure you want to remove this item?')) {
@@ -25,6 +62,23 @@ const CartPage = () => {
         if (window.confirm('Proceed to purchase all items in cart?')) {
             purchaseMutation.mutate();
         }
+    };
+
+    const handleSort = (field) => {
+        if (sortBy === field) {
+            setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortBy(field);
+            setSortOrder('asc');
+        }
+        setPageNo(1);
+    };
+
+    const SortIcon = ({ field }) => {
+        if (sortBy !== field) return <ArrowUpDown className="ml-1 h-3 w-3 opacity-30" />;
+        return sortOrder === 'asc'
+            ? <ArrowUp className="ml-1 h-3 w-3 text-blue-500" />
+            : <ArrowDown className="ml-1 h-3 w-3 text-blue-500" />;
     };
 
     // Helper to format currency safely
@@ -123,10 +177,22 @@ const CartPage = () => {
                                     <table className="w-full text-left border-collapse">
                                         <thead>
                                             <tr className="border-b border-gray-800 bg-[#0d1117]/50 text-xs font-bold uppercase tracking-wider text-gray-500">
-                                                <th className="px-4 py-4">Event / Ticket</th>
-                                                <th className="px-4 py-4 text-center">Quantity</th>
-                                                <th className="px-4 py-4 text-right">Price</th>
-                                                <th className="px-4 py-4 text-right">Total</th>
+                                                <th className="px-4 py-4 cursor-pointer hover:bg-gray-800/50 transition-colors" onClick={() => handleSort('ticket.event.name')}>
+                                                    <div className="flex items-center">
+                                                        Event / Ticket <SortIcon field="ticket.event.name" />
+                                                    </div>
+                                                </th>
+                                                <th className="px-4 py-4 text-center cursor-pointer hover:bg-gray-800/50 transition-colors" onClick={() => handleSort('subQuantity')}>
+                                                    <div className="flex items-center justify-center">
+                                                        Quantity <SortIcon field="subQuantity" />
+                                                    </div>
+                                                </th>
+                                                <th className="px-4 py-4 text-right cursor-pointer hover:bg-gray-800/50 transition-colors" onClick={() => handleSort('ticket.unitPrice')}>
+                                                    <div className="flex items-center justify-end">
+                                                        Unit Price <SortIcon field="ticket.unitPrice" />
+                                                    </div>
+                                                </th>
+                                                <th className="px-4 py-4 text-right">Subtotal Price</th>
                                                 <th className="px-4 py-4 text-center">Action</th>
                                             </tr>
                                         </thead>
@@ -167,8 +233,31 @@ const CartPage = () => {
                                                             </div>
                                                         </td>
                                                         <td className="px-4 py-3 text-center">
-                                                            <div className="inline-flex items-center rounded-md bg-gray-800/50 px-2 py-1 font-mono text-base font-bold text-white border border-gray-700">
-                                                                {item.subQuantity || 0}
+                                                            <div className="flex items-center justify-center">
+                                                                <div className="flex items-center bg-gray-800/50 rounded-lg border border-gray-700 overflow-hidden">
+                                                                    <button
+                                                                        onClick={() => handleQuantityChange(item.id, getDisplayQuantity(item) - 1)}
+                                                                        disabled={updateMutation.isPending || getDisplayQuantity(item) <= 1}
+                                                                        className="p-1.5 hover:bg-gray-700 text-gray-400 hover:text-white disabled:opacity-30 transition-colors"
+                                                                    >
+                                                                        <Minus className="h-4 w-4" />
+                                                                    </button>
+                                                                    <input
+                                                                        type="number"
+                                                                        min="1"
+                                                                        value={getDisplayQuantity(item)}
+                                                                        onChange={(e) => handleQuantityChange(item.id, e.target.value)}
+                                                                        disabled={updateMutation.isPending}
+                                                                        className="w-12 bg-transparent text-center font-mono text-base font-bold text-white focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                                    />
+                                                                    <button
+                                                                        onClick={() => handleQuantityChange(item.id, getDisplayQuantity(item) + 1)}
+                                                                        disabled={updateMutation.isPending}
+                                                                        className="p-1.5 hover:bg-gray-700 text-gray-400 hover:text-white disabled:opacity-30 transition-colors"
+                                                                    >
+                                                                        <Plus className="h-4 w-4" />
+                                                                    </button>
+                                                                </div>
                                                             </div>
                                                         </td>
                                                         <td className="px-4 py-3 text-right font-medium text-gray-400 text-sm">
@@ -176,18 +265,36 @@ const CartPage = () => {
                                                         </td>
                                                         <td className="px-4 py-3 text-right">
                                                             <div className="text-base font-bold text-green-400">
-                                                                {formatCurrency((item.ticket?.unitPrice || 0) * (item.subQuantity || 0))} đ
+                                                                {formatCurrency((item.ticket?.unitPrice || 0) * getDisplayQuantity(item))} đ
                                                             </div>
                                                         </td>
                                                         <td className="px-4 py-3 text-center">
-                                                            <button
-                                                                onClick={() => handleRemove(item.id)}
-                                                                disabled={removeMutation.isPending}
-                                                                className="flex items-center justify-center mx-auto h-8 w-8 rounded-lg text-gray-600 transition-all hover:bg-red-500/10 hover:text-red-500 disabled:opacity-30 active:scale-95"
-                                                                title="Remove Item"
-                                                            >
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </button>
+                                                            <div className="flex flex-col items-center justify-center space-y-2">
+                                                                <button
+                                                                    onClick={() => handleRemove(item.id)}
+                                                                    disabled={removeMutation.isPending}
+                                                                    className="flex items-center justify-center h-8 w-8 rounded-lg text-gray-600 transition-all hover:bg-red-500/10 hover:text-red-500 disabled:opacity-30 active:scale-95"
+                                                                    title="Remove Item"
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </button>
+
+                                                                <button
+                                                                    onClick={() => handleSaveQuantity(item)}
+                                                                    disabled={updateMutation.isPending || localQuantities[item.id] === undefined || localQuantities[item.id] === item.subQuantity}
+                                                                    className={`flex items-center justify-center h-8 w-8 rounded-lg transition-all active:scale-95 ${localQuantities[item.id] !== undefined && localQuantities[item.id] !== item.subQuantity
+                                                                        ? 'text-blue-500 bg-blue-500/10 hover:bg-blue-500/20 shadow-lg shadow-blue-500/10'
+                                                                        : 'text-gray-600 hover:bg-gray-800 opacity-50'
+                                                                        }`}
+                                                                    title="Save Changes"
+                                                                >
+                                                                    {updateMutation.isPending && updateMutation.variables?.orderTicketId === item.id ? (
+                                                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                                                    ) : (
+                                                                        <Save className="h-4 w-4" />
+                                                                    )}
+                                                                </button>
+                                                            </div>
                                                         </td>
                                                     </tr>
                                                 );
@@ -196,59 +303,72 @@ const CartPage = () => {
                                     </table>
                                 </div>
 
-                                {/* Server-side Pagination Detail */}
-                                <div className="border-t border-gray-800 bg-[#0d1117]/30 px-6 py-4">
-                                    <p className="text-sm text-gray-500">
-                                        Showing <span className="text-gray-300 font-medium">{(pageNo - 1) * pageSize + 1}</span> to <span className="text-gray-300 font-medium">{Math.min(pageNo * pageSize, totalElements)}</span> of <span className="text-gray-300 font-medium">{totalElements}</span> results
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Pagination Controls */}
-                            {totalPages > 1 && (
-                                <div className="mt-8 flex items-center justify-center space-x-3">
-                                    <button
-                                        onClick={() => setPageNo(prev => Math.max(1, prev - 1))}
-                                        disabled={pageNo === 1}
-                                        className="inline-flex items-center rounded-xl bg-[#161b22] border border-gray-700 px-5 py-3 text-sm font-bold text-white transition-all hover:bg-gray-800 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
-                                    >
-                                        <ChevronLeft className="mr-2 h-5 w-5" />
-                                        Previous
-                                    </button>
-
-                                    <div className="flex items-center space-x-2">
-                                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                                            // Simple pagination window logic
-                                            let p = i + 1;
-                                            if (totalPages > 5 && pageNo > 3) {
-                                                p = pageNo - 2 + i;
-                                                if (p > totalPages) p = totalPages - (4 - i);
-                                            }
-                                            return (
-                                                <button
-                                                    key={p}
-                                                    onClick={() => setPageNo(p)}
-                                                    className={`h-11 w-11 rounded-xl text-sm font-bold transition-all active:scale-90 ${pageNo === p
-                                                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20'
-                                                        : 'bg-[#161b22] border border-gray-700 text-gray-400 hover:border-gray-500'
-                                                        }`}
-                                                >
-                                                    {p}
-                                                </button>
-                                            )
-                                        })}
+                                {/* Combined Table Footer with Pagination and Page Size selector */}
+                                <div className="border-t border-gray-800 bg-[#0d1117]/30 px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                    <div className="flex items-center text-sm text-gray-500 order-2 sm:order-1">
+                                        <span>Show</span>
+                                        <select
+                                            value={pageSize}
+                                            onChange={(e) => {
+                                                setPageSize(Number(e.target.value));
+                                                setPageNo(1);
+                                            }}
+                                            className="mx-2 bg-[#161b22] border border-gray-700 rounded px-2 py-1 text-gray-300 focus:outline-none focus:border-blue-500 text-xs"
+                                        >
+                                            {[5, 10, 20, 50].map(size => (
+                                                <option key={size} value={size}>{size}</option>
+                                            ))}
+                                        </select>
+                                        <span>
+                                            entries • Showing <span className="text-gray-300 font-medium">{totalElements === 0 ? 0 : (pageNo - 1) * pageSize + 1}</span> to <span className="text-gray-300 font-medium">{Math.min(pageNo * pageSize, totalElements)}</span> of <span className="text-gray-300 font-medium">{totalElements}</span>
+                                        </span>
                                     </div>
 
-                                    <button
-                                        onClick={() => setPageNo(prev => Math.min(totalPages, prev + 1))}
-                                        disabled={pageNo === totalPages}
-                                        className="inline-flex items-center rounded-xl bg-[#161b22] border border-gray-700 px-5 py-3 text-sm font-bold text-white transition-all hover:bg-gray-800 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
-                                    >
-                                        Next
-                                        <ChevronRight className="ml-2 h-5 w-5" />
-                                    </button>
+                                    {totalPages > 1 && (
+                                        <div className="flex items-center space-x-2 order-1 sm:order-2">
+                                            <button
+                                                onClick={() => setPageNo(prev => Math.max(1, prev - 1))}
+                                                disabled={pageNo === 1}
+                                                className="p-2 rounded-lg bg-[#161b22] border border-gray-700 text-gray-400 hover:bg-gray-800 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                                title="Previous Page"
+                                            >
+                                                <ChevronLeft className="h-4 w-4" />
+                                            </button>
+
+                                            <div className="flex items-center space-x-1">
+                                                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                                    let p = i + 1;
+                                                    if (totalPages > 5 && pageNo > 3) {
+                                                        p = pageNo - 2 + i;
+                                                        if (p > totalPages) p = totalPages - (4 - i);
+                                                    }
+                                                    return (
+                                                        <button
+                                                            key={p}
+                                                            onClick={() => setPageNo(p)}
+                                                            className={`h-8 w-8 rounded-lg text-xs font-bold transition-all ${pageNo === p
+                                                                ? 'bg-blue-600 text-white'
+                                                                : 'bg-[#161b22] border border-gray-700 text-gray-400 hover:border-gray-500'
+                                                                }`}
+                                                        >
+                                                            {p}
+                                                        </button>
+                                                    )
+                                                })}
+                                            </div>
+
+                                            <button
+                                                onClick={() => setPageNo(prev => Math.min(totalPages, prev + 1))}
+                                                disabled={pageNo === totalPages}
+                                                className="p-2 rounded-lg bg-[#161b22] border border-gray-700 text-gray-400 hover:bg-gray-800 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                                title="Next Page"
+                                            >
+                                                <ChevronRight className="h-4 w-4" />
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
+                            </div>
                         </div>
 
                         {/* Order Information Section */}
@@ -270,12 +390,12 @@ const CartPage = () => {
                                         </div>
                                     )}
                                     <div className="flex justify-between text-gray-400">
-                                        <span className="text-sm uppercase tracking-wider font-semibold">Quantity</span>
+                                        <span className="text-sm uppercase tracking-wider font-semibold">Total Quantity</span>
                                         <span className="text-gray-200">{cart?.quantity || totalElements} items</span>
                                     </div>
                                     <div className="flex justify-between text-gray-400">
-                                        <span className="text-sm uppercase tracking-wider font-semibold">Subtotal</span>
-                                        <span className="font-mono text-gray-300">{formatCurrency(cart?.totalAmount)} đ</span>
+                                        <span className="text-sm uppercase tracking-wider font-semibold">Total Price</span>
+                                        <span className="font-mono text-gray-300">{formatCurrency(cart?.totalPrice)} đ</span>
                                     </div>
                                     <div className="flex justify-between text-gray-400">
                                         <span className="text-sm uppercase tracking-wider font-semibold">Discount</span>
@@ -286,7 +406,7 @@ const CartPage = () => {
                                         <div>
                                             <span className="block text-xs uppercase tracking-widest font-bold text-gray-500 mb-1">Final Amount</span>
                                             <span className="text-3xl font-black text-white tracking-tighter">
-                                                {formatCurrency(cart?.finalAmount || cart?.totalAmount)} đ
+                                                {formatCurrency(cart?.finalAmount || cart?.totalPrice)} đ
                                             </span>
                                         </div>
                                         <div className="h-10 w-10 flex items-center justify-center rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/20">

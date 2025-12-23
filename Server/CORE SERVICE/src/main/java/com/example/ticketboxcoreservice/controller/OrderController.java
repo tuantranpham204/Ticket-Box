@@ -38,7 +38,7 @@ public class OrderController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @Operation(summary = "purchase cart by user id")
+    @Operation(summary = "history of purchased orders by user id")
     @GetMapping("/history/{userId}")
     public ResponseEntity<ApiResponse> getOrderHistoryByUserId(
             @PathVariable("userId") Long userId,

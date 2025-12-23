@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface OrderRepository extends JpaRepository<Order,Long> {
     @Query("from Order o where o.buyer.id=:userId and o.status =:status")
@@ -15,4 +16,7 @@ public interface OrderRepository extends JpaRepository<Order,Long> {
 
     @Query("from Order o where o.buyer.id=:userId and o.status =:status")
     Page<Order> findOrderByUserIdAndPurchasedAsPage(Long userId, Integer status, Pageable pageable);
+
+    @Query("select o from Order o join OrderTicket ot on ot.order.id = o.id where ot.id=:orderTicketId")
+    Optional<Order> findByOrderTicketId(Long orderTicketId);
 }

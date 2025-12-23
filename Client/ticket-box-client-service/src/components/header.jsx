@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Search, Ticket, User, PlusCircle, ShoppingCart } from "lucide-react";
+import { Search, Ticket, User, PlusCircle, ShoppingCart, Receipt } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import { useUIStore } from "../store/useUiStore";
 import { Link, useNavigate } from 'react-router-dom';
@@ -30,34 +30,34 @@ export default function Header() {
             ticketbox
           </a>
           <nav className="hidden items-center gap-6 md:flex">
-            <a
-              href="#"
+            <Link
+              to="/category/1"
               className="text-sm font-medium text-gray-300 hover:text-white"
             >
               Music
-            </a>
-            <a
-              href="#"
+            </Link>
+            <Link
+              to="/category/2"
               className="text-sm font-medium text-gray-300 hover:text-white"
             >
               Stage & Art
-            </a>
-            <a
-              href="#"
+            </Link>
+            <Link
+              to="/category/3"
               className="text-sm font-medium text-gray-300 hover:text-white"
             >
               Sports
-            </a>
-            <a
-              href="#"
+            </Link>
+            <Link
+              to="/category/4"
               className="text-sm font-medium text-gray-300 hover:text-white"
             >
               Other
-            </a>
+            </Link>
           </nav>
         </div>
 
-        <div className="hidden w-full max-w-sm lg:flex">
+        <div className="hidden w-full max-w-xs lg:flex">
           <div className="relative w-full">
             <input
               type="text"
@@ -80,7 +80,7 @@ export default function Header() {
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <Link
             to="/create-event"
             className="hidden items-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold hover:bg-blue-700 md:flex"
@@ -101,19 +101,26 @@ export default function Header() {
 
           {user ? (
             <>
-              <a
-                href="/cart-tickets"
-                className="flex items-center gap-2 text-sm font-medium hover:text-blue-400"
+              <Link
+                to="/cart-tickets"
+                className="flex items-center gap-2 text-sm font-medium hover:text-blue-400 transition-colors"
               >
                 <ShoppingCart className="h-5 w-5" />
-                Ticket Cart
-              </a>
+                <span className="hidden xl:inline">Ticket Cart</span>
+              </Link>
+              <Link
+                to="/order-history"
+                className="flex items-center gap-2 text-sm font-medium hover:text-blue-400 transition-colors"
+              >
+                <Receipt className="h-5 w-5" />
+                <span className="hidden xl:inline">Order History</span>
+              </Link>
               <button
                 onClick={logout}
-                className="flex items-center gap-2 text-sm font-medium hover:text-blue-400"
+                className="flex items-center gap-2 text-sm font-medium hover:text-blue-400 transition-colors"
               >
                 <User className="h-5 w-5" />
-                Logout
+                <span className="hidden lg:inline">Logout</span>
               </button>
             </>
           ) : (

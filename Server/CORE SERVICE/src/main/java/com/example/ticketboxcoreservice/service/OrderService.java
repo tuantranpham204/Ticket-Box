@@ -65,6 +65,7 @@ public class OrderService {
                 .build();
     }
 
+
     private Order getCartByUserIdFunction(Long userId) {
         List<Order> orders = orderRepository.findOrderByUserIdAndPurchasedAsList(userId,
                 com.example.ticketboxcoreservice.enumf.Constants.ORDER_STATUS_NOT_PURCHASED);

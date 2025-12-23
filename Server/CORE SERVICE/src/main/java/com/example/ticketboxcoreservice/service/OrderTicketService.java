@@ -74,17 +74,21 @@ public class OrderTicketService {
                 .equals(com.example.ticketboxcoreservice.enumf.Constants.ORDER_TICKET_STATUS_INACTIVE)) {
             throw new AppException(ErrorCode.ONLY_INACTIVE_ORDER_TICKETS_IS_UPDATABLE_AND_REMOVABLE);
         }
+        updateOrderTotals(cart, orderTicket, orderTicketRequest.getSubQuantity());
+        orderTicket.setSubQuantity(orderTicketRequest.getSubQuantity());
         orderTicket.validateSubQuantity();
-        OrderTicket newOrderTicket = modelMapper.map(orderTicketRequest, OrderTicket.class);
-        orderTicket.setRelationship(
-                relationshipRepository.findById(orderTicketRequest.getRelationshipId()).orElseThrow(
-                        () -> new ResourceNotFoundException("ticket", "ticket id", orderTicketRequest.getTicketId())));
-        newOrderTicket.setId(orderTicket.getId());
-        return modelMapper.map(orderTicketRepository.save(newOrderTicket), OrderTicketResponse.class);
+        if (!Objects.equals(orderTicket.getRelationship().getId(), orderTicketRequest.getRelationshipId()))
+            orderTicket.setRelationship(
+                    relationshipRepository.findById(orderTicketRequest.getRelationshipId()).orElseThrow(
+                            () -> new ResourceNotFoundException("relationship", "relationship id",
+                                    orderTicketRequest.getRelationshipId())));
+        return modelMapper.map(orderTicketRepository.save(orderTicket), OrderTicketResponse.class);
     }
 
     @Transactional
     public MessageResponse deleteOrderTicket(Long orderTicketId) {
+
+
         if (orderTicketRepository.getOrderTicketStatusByOrderTicketId(
                 orderTicketId) != com.example.ticketboxcoreservice.enumf.Constants.ORDER_TICKET_STATUS_INACTIVE) {
             throw new AppException(ErrorCode.ONLY_INACTIVE_ORDER_TICKETS_IS_UPDATABLE_AND_REMOVABLE);
@@ -93,6 +97,14 @@ public class OrderTicketService {
                 orderTicketId) != com.example.ticketboxcoreservice.enumf.Constants.ORDER_STATUS_NOT_PURCHASED) {
             throw new AppException(ErrorCode.ONLY_CART_IS_UPDATABLE);
         }
+
+        Order cart = orderRepository.findByOrderTicketId(orderTicketId).orElseThrow(
+                () -> new ResourceNotFoundException("order", "order ticket id", orderTicketId)
+        );
+        OrderTicket orderTicket = orderTicketRepository.findById(orderTicketId).orElseThrow(
+                () -> new ResourceNotFoundException("ticket", "ticket id", orderTicketId));
+
+        updateOrderTotals(cart, orderTicket, 0l);
         orderTicketRepository.deleteById(orderTicketId);
         return new MessageResponse("Order ticket with id " + orderTicketId + " is deleted successfully!");
     }
@@ -178,6 +190,13 @@ public class OrderTicketService {
         if (orders.size() != 1)
             throw new AppException(ErrorCode.INVALID_NUMBER_OF_CARTS);
         return orders.get(0);
+    }
+
+    private void updateOrderTotals(Order order, OrderTicket orderTicket, Long newQty) {
+        Long qtyDiff = newQty - orderTicket.getSubQuantity();
+        order.setQuantity(order.getQuantity() + qtyDiff);
+        order.setTotalPrice(order.getTotalPrice() + qtyDiff * orderTicket.getTicket().getUnitPrice());
+        orderRepository.save(order);
     }
 
 }

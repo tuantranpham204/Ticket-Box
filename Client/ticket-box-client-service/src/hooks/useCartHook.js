@@ -4,10 +4,10 @@ import { useAuthStore } from "../store/useAuthStore";
 import { toast } from "sonner";
 import { SELF_RELATIONSHIP_ID } from "../utils/util";
 
-const getCartItems = async (userId, pageNo = 1, pageSize = 10) => {
+const getCartItems = async (userId, pageNo = 1, pageSize = 10, sortBy = 'id', direction = 'asc') => {
     if (!userId) return { pageContent: [], totalPages: 0, totalElements: 0 };
     return await handleApiResponse(apiClient.get(`/order-tickets/cart/${userId}`, {
-        params: { pageNo, pageSize, sortBy: 'id' }
+        params: { pageNo, pageSize, sortBy, direction }
     }));
 };
 
@@ -17,7 +17,6 @@ const getCart = async (userId) => {
 };
 
 const createOrderTicket = async ({ userId, data, user }) => {
-    // data should be { ticketId, quantity }
     const payload = {
         ownerName: user?.fullName || user?.username || "",
         relationshipId: SELF_RELATIONSHIP_ID,
@@ -27,33 +26,32 @@ const createOrderTicket = async ({ userId, data, user }) => {
     return await handleApiResponse(apiClient.post(`/order-tickets/create/${userId}`, payload));
 };
 
-const updateOrderTicket = async (userId, orderTicketId, payload) => {
+const updateOrderTicket = async ({ userId, orderTicketId, data, user }) => {
+    const payload = {
+        ownerName: data.ownerName || user?.fullName || user?.username || "",
+        relationshipId: data.relationshipId || SELF_RELATIONSHIP_ID,
+        ticketId: data.ticketId || data.ticket?.id,
+        subQuantity: data.subQuantity || data.quantity || 1
+    };
     return await handleApiResponse(apiClient.put(`/order-tickets/update/${userId}/${orderTicketId}`, payload));
 };
 
 const addToCartLogic = async ({ userId, data, user }) => {
-    // 1. Fetch current cart items (trying to get enough to find duplicate)
     const cartItemsData = await getCartItems(userId, 1, 100);
-
-    // 2. Check for existing item with same ticketId and SELF_RELATIONSHIP_ID
     const existingItem = cartItemsData?.pageContent?.find(item =>
         item.ticket?.id === data.ticketId && item.relationshipId === SELF_RELATIONSHIP_ID
     );
-
     if (existingItem) {
-        // 3. Update existing item's quantity
         const currentQty = existingItem.subQuantity || 0;
         const addQty = data.quantity || 1;
         const newQuantity = currentQty + addQty;
 
-        const payload = {
-            ownerName: user?.fullName || user?.username || "",
-            relationshipId: SELF_RELATIONSHIP_ID,
-            ticketId: data.ticketId,
-            subQuantity: newQuantity
-        };
-
-        return await updateOrderTicket(userId, existingItem.id, payload);
+        return await updateOrderTicket({
+            userId,
+            orderTicketId: existingItem.id,
+            data: { ...existingItem, subQuantity: newQuantity },
+            user
+        });
     } else {
         // 4. Create new item
         return await createOrderTicket({ userId, data, user });
@@ -68,11 +66,11 @@ const purchaseCart = async (userId) => {
     return await handleApiResponse(apiClient.put(`/orders/purchase/${userId}`));
 };
 
-export const useCartItems = (pageNo = 1, pageSize = 10) => {
+export const useCartItems = (pageNo = 1, pageSize = 10, sortBy = 'id', direction = 'asc') => {
     const { user } = useAuthStore();
     return useQuery({
-        queryKey: ['cart', user?.id, pageNo, pageSize],
-        queryFn: async () => await getCartItems(user?.id, pageNo, pageSize),
+        queryKey: ['cart', user?.id, pageNo, pageSize, sortBy, direction],
+        queryFn: async () => await getCartItems(user?.id, pageNo, pageSize, sortBy, direction),
         enabled: !!user?.id,
     });
 };
@@ -97,6 +95,24 @@ export const useAddToCartMutation = () => {
             queryClient.invalidateQueries(['cart', user?.id]);
             queryClient.invalidateQueries(['cart-summary', user?.id]);
         },
+    });
+};
+
+export const useUpdateOrderTicketMutation = () => {
+    const queryClient = useQueryClient();
+    const { user } = useAuthStore();
+
+    return useMutation({
+        mutationFn: ({ orderTicketId, data }) => updateOrderTicket({ userId: user?.id, orderTicketId, data, user }),
+        onSuccess: () => {
+            return Promise.all([
+                queryClient.invalidateQueries(['cart', user?.id]),
+                queryClient.invalidateQueries(['cart-summary', user?.id])
+            ]);
+        },
+        onError: (error) => {
+            toast.error(error.message || "Failed to update quantity.");
+        }
     });
 };
 

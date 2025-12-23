@@ -7,6 +7,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.util.Optional;
+
 public interface OrderTicketRepository extends JpaRepository<OrderTicket,Long> {
     @Query("SELECT ot.status FROM OrderTicket ot WHERE ot.id=:orderTicketId")
     int getOrderTicketStatusByOrderTicketId(Long orderTicketId);
@@ -16,4 +18,8 @@ public interface OrderTicketRepository extends JpaRepository<OrderTicket,Long> {
 
     @Query("SELECT ot FROM OrderTicket ot WHERE ot.order.id=:orderId")
     Page<OrderTicket> findByOrderId(Long orderId, Pageable pageable);
+
+    @Query("SELECT ot.subQuantity FROM OrderTicket ot WHERE ot.id=:orderTicketId")
+    Optional<Long> getSubQuantityByOrderTicketId(Long orderTicketId);
+
 }

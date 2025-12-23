@@ -111,10 +111,10 @@ export const useSearchEventsByParams = (searchParams) => {
     staleTime: 1000 * 60
   })
 }
-export const useEventsByCategory = (categoryId, status) => {
+export const useEventsByCategory = (categoryId, status, page = 1, pageSize = 10) => {
   return useQuery({
-    queryKey: ['events', 'category', categoryId, status],
-    queryFn: async () => await getEventsByCategory(categoryId, status),
+    queryKey: ['events', 'category', categoryId, status, page, pageSize],
+    queryFn: async () => await getEventsByCategory(categoryId, status, page, pageSize),
     enabled: !!categoryId,
     staleTime: 1000 * 60 * 5,
   });
