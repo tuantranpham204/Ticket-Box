@@ -21,6 +21,12 @@ const createTicket = async ({ userId, eventId, ticketData }) => {
     apiClient.post(`/tickets/create/${eventId}/${userId}`, ticketData)
   );
 };
+const updateTicket = async ({ userId, ticketId, ticketData }) => {
+  // Endpoint: /tickets/update/{ticketId}/{creatorUserId}
+  return await handleApiResponse(
+    apiClient.put(`/tickets/update/${ticketId}/${userId}`, ticketData)
+  );
+};
 
 
 // HOOKS
@@ -53,8 +59,24 @@ export const useCreateTicketMutation = () => {
       ticketData: data.ticketData
     }),
     onSuccess: () => {
-      // Invalidate queries if necessary, though usually we redirect after creation
       queryClient.invalidateQueries(['tickets']);
+    },
+  });
+};
+
+export const useUpdateTicketMutation = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuthStore.getState();
+
+  return useMutation({
+    mutationFn: ({ ticketId, ticketData }) => updateTicket({
+      userId: user?.id,
+      ticketId: ticketId,
+      ticketData: ticketData
+    }),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries(['tickets']);
+      // If we have an eventId in variables, we could invalidate that too
     },
   });
 };

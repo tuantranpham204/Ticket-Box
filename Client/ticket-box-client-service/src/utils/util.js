@@ -38,3 +38,18 @@ export const ORDER_TICKET_STATUS = {
 };
 
 export const SELF_RELATIONSHIP_ID = 1;
+
+/**
+ * Formats a date string into a premium format: "24 Dec. 2025"
+ * @param {string|Date} date - The date to format
+ * @returns {string} - Formatted date string
+ */
+export const formatEventDate = (date) => {
+  if (!date) return "";
+  const d = new Date(date);
+  const day = d.getDate();
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const month = months[d.getMonth()];
+  const year = d.getFullYear();
+  return `${day} ${month}. ${year}`;
+};

@@ -32,12 +32,12 @@ public class TicketController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
     @Operation(summary = "update ticket request by user id")
-    @PutMapping("/update/{eventId}/{creatorUserId}")
+    @PutMapping("/update/{ticketId}/{creatorUserId}")
     public ResponseEntity<ApiResponse> updateTicket(
             @PathVariable("creatorUserId") Long creatorUserId,
-            @PathVariable("eventId") Long eventId,
+            @PathVariable("ticketId") Long ticketId,
             @RequestBody TicketRequest ticketRequest) {
-        ApiResponse response = ApiResponse.succeed(ticketService.updateTicket(creatorUserId, eventId, ticketRequest));
+        ApiResponse response = ApiResponse.succeed(ticketService.updateTicket(creatorUserId, ticketId, ticketRequest));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

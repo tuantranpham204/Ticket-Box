@@ -36,8 +36,6 @@ apiClient.interceptors.response.use(
       console.error("Authentication Error: Logging out user.");
       // Call the logout action from our Zustand store
       useAuthStore.getState().logout();
-      // Redirect to login page
-      window.location.href = '/login';
     }
 
     // Global Error Toast for HTTP errors

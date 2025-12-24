@@ -64,6 +64,17 @@ const getEventsByStatus = async (status, page = 1, pageSize = 10) => {
   }));
 };
 
+const getEventsByCreator = async (creatorUserId, status, page = 1, pageSize = 10) => {
+  if (!creatorUserId) return Promise.reject(new Error('Creator User ID is required.'));
+  if (status === undefined) return Promise.reject(new Error('Status is required.'));
+  return await handleApiResponse(apiClient.get(`/events/creator/${creatorUserId}/${status}`, {
+    params: {
+      pageNo: page,
+      pageSize: pageSize
+    }
+  }));
+};
+
 const createEvent = async ({ creatorUserId, eventData }) => {
   // Sends JSON data to create the event entity
   return await handleApiResponse(
@@ -74,6 +85,20 @@ const uploadEventFiles = async ({ eventId, formData }) => {
   // Sends files (images, PDFs) to the specific upload endpoint
   return await handleApiResponse(
     apiClient.put(`/events/upload/${eventId}`, formData)
+  );
+};
+
+const updateEvent = async ({ eventId, creatorUserId, eventData }) => {
+  // Endpoint: /api/events/update/{eventId}/{creatorUserId}
+  return await handleApiResponse(
+    apiClient.put(`/events/update/${eventId}/${creatorUserId}`, eventData)
+  );
+};
+
+const cancelEvent = async ({ eventId, creatorUserId }) => {
+  // Endpoint: /api/events/cancellation/{eventId}/{creatorUserId}
+  return await handleApiResponse(
+    apiClient.put(`/events/cancel/${eventId}/${creatorUserId}`)
   );
 };
 
@@ -128,6 +153,15 @@ export const useEventsByStatus = (status, page = 1, pageSize = 10) => {
     staleTime: 1000 * 60 * 5,
   });
 };
+
+export const useEventsByCreator = (creatorUserId, status, page = 1, pageSize = 10) => {
+  return useQuery({
+    queryKey: ['events', 'creator', creatorUserId, status, page, pageSize],
+    queryFn: async () => await getEventsByCreator(creatorUserId, status, page, pageSize),
+    enabled: !!creatorUserId && status !== undefined,
+    staleTime: 1000 * 60 * 5,
+  });
+};
 export const useCreateEventMutation = () => {
   const queryClient = useQueryClient();
   const { user } = useAuthStore.getState();
@@ -143,7 +177,6 @@ export const useCreateEventMutation = () => {
       }
       const newEventId = eventResponse.id;
       // Step 2: Upload files to the new event ID
-      // We check if the formData has any entries before sending
       if (formData) {
         await uploadEventFiles({
           eventId: newEventId,
@@ -154,6 +187,52 @@ export const useCreateEventMutation = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['events']);
+    },
+  });
+};
+
+export const useUpdateEventMutation = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuthStore.getState();
+  return useMutation({
+    mutationFn: async ({ eventId, generalData, formData }) => {
+      // Step 1: Update the event entity (Text fields)
+      const eventResponse = await updateEvent({
+        eventId,
+        creatorUserId: user?.id,
+        eventData: generalData
+      });
+
+      // Step 2: Upload new files if provided
+      if (formData) {
+        // Based on API /api/events/upload/{eventId} which is also used for updates
+        await uploadEventFiles({
+          eventId,
+          formData
+        });
+      }
+      return eventResponse;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries(['events']);
+      queryClient.invalidateQueries(['event', variables.eventId]);
+    },
+  });
+};
+
+export const useCancelEventMutation = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuthStore.getState();
+  return useMutation({
+    mutationFn: async (eventId) => {
+      return await cancelEvent({
+        eventId,
+        creatorUserId: user?.id
+      });
+    },
+    onSuccess: (_, eventId) => {
+      queryClient.invalidateQueries(['events']);
+      queryClient.invalidateQueries(['event', eventId]);
     },
   });
 };

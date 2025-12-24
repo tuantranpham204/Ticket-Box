@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useOrderHistory } from '../hooks/useOrderHistoryHook';
-import { Loader2, Receipt, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, ExternalLink } from 'lucide-react';
+import { Loader2, Receipt, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, ExternalLink, ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const OrderHistoryPage = () => {
@@ -8,6 +8,8 @@ const OrderHistoryPage = () => {
     const [pageSize, setPageSize] = useState(10);
     const [sortBy, setSortBy] = useState('id');
     const [sortOrder, setSortOrder] = useState('desc');
+    const [isPageSizeDropdownOpen, setIsPageSizeDropdownOpen] = useState(false);
+    const pageSizeDropdownTimeoutRef = useRef(null);
 
     const { data: orderHistoryData, isLoading, isError, error } = useOrderHistory(pageNo, pageSize, sortBy, sortOrder);
 
@@ -59,6 +61,25 @@ const OrderHistoryPage = () => {
             default:
                 return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
         }
+    };
+
+    const handlePageSizeMouseEnter = () => {
+        if (pageSizeDropdownTimeoutRef.current) {
+            clearTimeout(pageSizeDropdownTimeoutRef.current);
+        }
+        setIsPageSizeDropdownOpen(true);
+    };
+
+    const handlePageSizeMouseLeave = () => {
+        pageSizeDropdownTimeoutRef.current = setTimeout(() => {
+            setIsPageSizeDropdownOpen(false);
+        }, 300);
+    };
+
+    const handlePageSizeSelect = (size) => {
+        setPageSize(size);
+        setPageNo(1);
+        setIsPageSizeDropdownOpen(false);
     };
 
     if (isLoading) {
@@ -127,7 +148,7 @@ const OrderHistoryPage = () => {
                     </div>
                 ) : (
                     <div className="flex flex-col">
-                        <div className="overflow-hidden rounded-2xl border border-gray-800 bg-[#161b22] shadow-2xl">
+                        <div className="rounded-2xl border border-gray-800 bg-[#161b22] shadow-2xl">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left border-collapse">
                                     <thead>
@@ -196,19 +217,38 @@ const OrderHistoryPage = () => {
                             {/* Pagination Footer */}
                             <div className="border-t border-gray-800 bg-[#0d1117]/30 px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
                                 <div className="flex items-center text-sm text-gray-500">
-                                    <span>Show</span>
-                                    <select
-                                        value={pageSize}
-                                        onChange={(e) => {
-                                            setPageSize(Number(e.target.value));
-                                            setPageNo(1);
-                                        }}
-                                        className="mx-2 bg-[#161b22] border border-gray-700 rounded px-2 py-1 text-gray-300 focus:outline-none focus:border-blue-500 text-xs"
+                                    <div
+                                        className="relative mx-2"
+                                        onMouseEnter={handlePageSizeMouseEnter}
+                                        onMouseLeave={handlePageSizeMouseLeave}
                                     >
-                                        {[5, 10, 20, 50].map(size => (
-                                            <option key={size} value={size}>{size}</option>
-                                        ))}
-                                    </select>
+                                        <button
+                                            className="flex items-center gap-2 rounded-lg bg-[#161b22] border border-gray-700 px-3 py-1.5 text-xs text-gray-300 transition-all hover:bg-gray-800 focus:outline-none focus:border-blue-500"
+                                            onClick={() => setIsPageSizeDropdownOpen(!isPageSizeDropdownOpen)}
+                                        >
+                                            {pageSize}
+                                            <ChevronDown className={`h-3 w-3 text-gray-500 transition-transform duration-300 ${isPageSizeDropdownOpen ? 'rotate-180' : ''}`} />
+                                        </button>
+
+                                        {isPageSizeDropdownOpen && (
+                                            <div className="absolute bottom-full left-0 z-50 mb-2 w-20 animate-bounce-in">
+                                                <div className="overflow-hidden rounded-xl border border-gray-700 bg-gray-900/90 p-1 shadow-2xl backdrop-blur-xl ring-1 ring-white/10">
+                                                    {[5, 10, 20, 50].map(size => (
+                                                        <button
+                                                            key={size}
+                                                            onClick={() => handlePageSizeSelect(size)}
+                                                            className={`flex w-full items-center justify-center rounded-lg px-2 py-2 text-xs font-medium transition-all ${pageSize === size
+                                                                ? 'bg-blue-600 text-white'
+                                                                : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                                                                }`}
+                                                        >
+                                                            {size}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
                                     <span>
                                         entries • Showing <span className="text-gray-300 font-medium">{totalElements === 0 ? 0 : (pageNo - 1) * pageSize + 1}</span> to <span className="text-gray-300 font-medium">{Math.min(pageNo * pageSize, totalElements)}</span> of <span className="text-gray-300 font-medium">{totalElements}</span>
                                     </span>

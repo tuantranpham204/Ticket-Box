@@ -33,12 +33,8 @@ public class SecurityConfig {
                         config -> config
 
                                 .requestMatchers("/api/auth/**").permitAll()
-                                .requestMatchers("/swagger-ui/index.html/**", "/v3/api-docs/**", "/swagger-ui/**")
-                                .permitAll()
-                                .requestMatchers(HttpMethod.GET, String.format("/api/events/category/%s", Constants.EVENT_STATUS_UPCOMING)).permitAll()
-                                .requestMatchers(HttpMethod.GET, String.format("/api/events/category/%s", Constants.EVENT_STATUS_RUNNING)).permitAll()
-                                .requestMatchers(HttpMethod.GET, String.format("/api/events/%s", Constants.EVENT_STATUS_UPCOMING)).permitAll()
-                                .requestMatchers(HttpMethod.GET, String.format("/api/events/%s", Constants.EVENT_STATUS_UPCOMING)).permitAll()
+                                .requestMatchers("/swagger-ui/index.html/**", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/events/category/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/events/ticket/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/events/event/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/tickets/event/**").permitAll()
@@ -47,7 +43,7 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.GET, "/api/tickets/lowest-price/**").permitAll()
 
                                 // USER endpoints
-                                .requestMatchers(HttpMethod.GET, String.format("/api/events/category/**")).hasAnyRole("USER", "ADMIN", "APPROVER")
+
                                 .requestMatchers(HttpMethod.GET, "/api/users/{userId}/**")
                                 .hasAnyRole("USER", "ADMIN", "APPROVER")
                                 .requestMatchers(HttpMethod.POST, "/api/orders/**")

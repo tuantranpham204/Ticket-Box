@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useCartItems, useCart, useRemoveFromCartMutation, usePurchaseCartMutation, useUpdateOrderTicketMutation } from '../hooks/useCartHook';
-import { Loader2, Trash2, ShoppingCart, CreditCard, ChevronLeft, ChevronRight, Plus, Minus, ArrowUpDown, ArrowUp, ArrowDown, Save } from 'lucide-react';
+import { Loader2, Trash2, ShoppingCart, CreditCard, ChevronLeft, ChevronRight, Plus, Minus, ArrowUpDown, ArrowUp, ArrowDown, Save, ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { SELF_RELATIONSHIP_ID } from '../utils/util';
 import { useAuthStore } from '../store/useAuthStore';
@@ -12,6 +12,8 @@ const CartPage = () => {
     const [sortBy, setSortBy] = useState('id');
     const [sortOrder, setSortOrder] = useState('desc');
     const [localQuantities, setLocalQuantities] = useState({}); // { orderTicketId: value }
+    const [isPageSizeDropdownOpen, setIsPageSizeDropdownOpen] = useState(false);
+    const pageSizeDropdownTimeoutRef = useRef(null);
 
     const { data: cartItemsData, isLoading, isError, error } = useCartItems(pageNo, pageSize, sortBy, sortOrder);
     const { data: cart } = useCart();
@@ -104,6 +106,25 @@ const CartPage = () => {
         }
     };
 
+    const handlePageSizeMouseEnter = () => {
+        if (pageSizeDropdownTimeoutRef.current) {
+            clearTimeout(pageSizeDropdownTimeoutRef.current);
+        }
+        setIsPageSizeDropdownOpen(true);
+    };
+
+    const handlePageSizeMouseLeave = () => {
+        pageSizeDropdownTimeoutRef.current = setTimeout(() => {
+            setIsPageSizeDropdownOpen(false);
+        }, 300);
+    };
+
+    const handlePageSizeSelect = (size) => {
+        setPageSize(size);
+        setPageNo(1);
+        setIsPageSizeDropdownOpen(false);
+    };
+
     if (isLoading) {
         return (
             <div className="flex min-h-screen items-center justify-center bg-[#0d1117] text-white">
@@ -172,7 +193,7 @@ const CartPage = () => {
                     <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
                         {/* Cart Items Table - Datatable Style */}
                         <div className="lg:col-span-8 flex flex-col">
-                            <div className="flex-grow overflow-hidden rounded-2xl border border-gray-800 bg-[#161b22] shadow-2xl">
+                            <div className="flex-grow rounded-2xl border border-gray-800 bg-[#161b22] shadow-2xl">
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-left border-collapse">
                                         <thead>
@@ -306,19 +327,38 @@ const CartPage = () => {
                                 {/* Combined Table Footer with Pagination and Page Size selector */}
                                 <div className="border-t border-gray-800 bg-[#0d1117]/30 px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
                                     <div className="flex items-center text-sm text-gray-500 order-2 sm:order-1">
-                                        <span>Show</span>
-                                        <select
-                                            value={pageSize}
-                                            onChange={(e) => {
-                                                setPageSize(Number(e.target.value));
-                                                setPageNo(1);
-                                            }}
-                                            className="mx-2 bg-[#161b22] border border-gray-700 rounded px-2 py-1 text-gray-300 focus:outline-none focus:border-blue-500 text-xs"
+                                        <div
+                                            className="relative mx-2"
+                                            onMouseEnter={handlePageSizeMouseEnter}
+                                            onMouseLeave={handlePageSizeMouseLeave}
                                         >
-                                            {[5, 10, 20, 50].map(size => (
-                                                <option key={size} value={size}>{size}</option>
-                                            ))}
-                                        </select>
+                                            <button
+                                                className="flex items-center gap-2 rounded-lg bg-[#161b22] border border-gray-700 px-3 py-1.5 text-xs text-gray-300 transition-all hover:bg-gray-800 focus:outline-none focus:border-blue-500"
+                                                onClick={() => setIsPageSizeDropdownOpen(!isPageSizeDropdownOpen)}
+                                            >
+                                                {pageSize}
+                                                <ChevronDown className={`h-3 w-3 text-gray-500 transition-transform duration-300 ${isPageSizeDropdownOpen ? 'rotate-180' : ''}`} />
+                                            </button>
+
+                                            {isPageSizeDropdownOpen && (
+                                                <div className="absolute bottom-full left-0 z-50 mb-2 w-20 animate-bounce-in">
+                                                    <div className="overflow-hidden rounded-xl border border-gray-700 bg-gray-900/90 p-1 shadow-2xl backdrop-blur-xl ring-1 ring-white/10">
+                                                        {[5, 10, 20, 50].map(size => (
+                                                            <button
+                                                                key={size}
+                                                                onClick={() => handlePageSizeSelect(size)}
+                                                                className={`flex w-full items-center justify-center rounded-lg px-2 py-2 text-xs font-medium transition-all ${pageSize === size
+                                                                    ? 'bg-blue-600 text-white'
+                                                                    : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                                                                    }`}
+                                                            >
+                                                                {size}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
                                         <span>
                                             entries • Showing <span className="text-gray-300 font-medium">{totalElements === 0 ? 0 : (pageNo - 1) * pageSize + 1}</span> to <span className="text-gray-300 font-medium">{Math.min(pageNo * pageSize, totalElements)}</span> of <span className="text-gray-300 font-medium">{totalElements}</span>
                                         </span>

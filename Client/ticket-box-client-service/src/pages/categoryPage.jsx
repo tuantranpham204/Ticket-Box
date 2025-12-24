@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useEventsByCategory } from '../hooks/useEventHook';
 import EventCard from '../components/eventCard';
-import { Loader2, AlertCircle, ChevronLeft, ChevronRight, LayoutGrid } from 'lucide-react';
+import { Loader2, AlertCircle, ChevronLeft, ChevronRight, LayoutGrid, ChevronDown } from 'lucide-react';
 import { CAT, EVENT_STATUS } from '../utils/util';
 
 const CategoryPage = () => {
     const { categoryId } = useParams();
     const [pageNo, setPageNo] = useState(1);
     const [pageSize, setPageSize] = useState(12);
+    const [isPageSizeDropdownOpen, setIsPageSizeDropdownOpen] = useState(false);
+    const pageSizeDropdownTimeoutRef = useRef(null);
 
     const catId = parseInt(categoryId);
 
@@ -41,6 +43,25 @@ const CategoryPage = () => {
     };
 
     const categoryName = getCategoryName(catId);
+
+    const handlePageSizeMouseEnter = () => {
+        if (pageSizeDropdownTimeoutRef.current) {
+            clearTimeout(pageSizeDropdownTimeoutRef.current);
+        }
+        setIsPageSizeDropdownOpen(true);
+    };
+
+    const handlePageSizeMouseLeave = () => {
+        pageSizeDropdownTimeoutRef.current = setTimeout(() => {
+            setIsPageSizeDropdownOpen(false);
+        }, 300);
+    };
+
+    const handlePageSizeSelect = (size) => {
+        setPageSize(size);
+        setPageNo(1);
+        setIsPageSizeDropdownOpen(false);
+    };
 
     if (isLoading && !eventData) {
         return (
@@ -134,18 +155,38 @@ const CategoryPage = () => {
                         <div className="flex flex-col sm:flex-row items-center justify-between gap-6 border-t border-gray-800 pt-8">
                             <div className="flex items-center gap-3 text-sm text-gray-400">
                                 <span>Show</span>
-                                <select
-                                    value={pageSize}
-                                    onChange={(e) => {
-                                        setPageSize(Number(e.target.value));
-                                        setPageNo(1);
-                                    }}
-                                    className="bg-[#161b22] border border-gray-700 rounded-lg px-3 py-1.5 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                <div
+                                    className="relative"
+                                    onMouseEnter={handlePageSizeMouseEnter}
+                                    onMouseLeave={handlePageSizeMouseLeave}
                                 >
-                                    {[8, 12, 24, 48].map(size => (
-                                        <option key={size} value={size}>{size} per page</option>
-                                    ))}
-                                </select>
+                                    <button
+                                        className="flex items-center gap-2 rounded-lg bg-[#161b22] border border-gray-700 px-3 py-1.5 text-xs text-gray-200 transition-all hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                        onClick={() => setIsPageSizeDropdownOpen(!isPageSizeDropdownOpen)}
+                                    >
+                                        {pageSize} per page
+                                        <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform duration-300 ${isPageSizeDropdownOpen ? 'rotate-180' : ''}`} />
+                                    </button>
+
+                                    {isPageSizeDropdownOpen && (
+                                        <div className="absolute bottom-full left-0 z-50 mb-2 w-32 animate-bounce-in">
+                                            <div className="overflow-hidden rounded-xl border border-gray-700 bg-gray-900/90 p-1 shadow-2xl backdrop-blur-xl ring-1 ring-white/10">
+                                                {[8, 12, 24, 48].map(size => (
+                                                    <button
+                                                        key={size}
+                                                        onClick={() => handlePageSizeSelect(size)}
+                                                        className={`flex w-full items-center justify-center rounded-lg px-2 py-2 text-xs font-medium transition-all ${pageSize === size
+                                                            ? 'bg-blue-600 text-white'
+                                                            : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                                                            }`}
+                                                    >
+                                                        {size} per page
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
                             {totalPages > 1 && (
@@ -170,8 +211,8 @@ const CategoryPage = () => {
                                                     key={p}
                                                     onClick={() => setPageNo(p)}
                                                     className={`h-10 w-10 rounded-xl text-sm font-bold transition-all ${pageNo === p
-                                                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40'
-                                                            : 'bg-[#161b22] border border-gray-700 text-gray-400 hover:border-gray-500 hover:text-gray-200'
+                                                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40'
+                                                        : 'bg-[#161b22] border border-gray-700 text-gray-400 hover:border-gray-500 hover:text-gray-200'
                                                         }`}
                                                 >
                                                     {p}
