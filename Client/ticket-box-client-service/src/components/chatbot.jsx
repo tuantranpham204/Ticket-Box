@@ -4,7 +4,7 @@ const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
     {
-      text: "Hey yoo! Mình là trợ lý bán vé đêyy. Bạn cần tìm vé gì hôm nay?",
+      text: "Hey yoo! I'm your ticket assistant. What tickets are you looking for today?",
       sender: "bot",
     },
   ]);
@@ -41,7 +41,7 @@ const Chatbot = () => {
     } catch (error) {
       setMessages((prev) => [
         ...prev,
-        { text: "Lỗi kết nối server AI!", sender: "bot" },
+        { text: "Error connect to server AI!", sender: "bot" },
       ]);
     } finally {
       setLoading(false);
@@ -91,7 +91,7 @@ const Chatbot = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={(e) => e.key === "Enter" && handleSend()}
-              placeholder="Hỏi về sự kiện..."
+              placeholder="Ask about event..."
               style={styles.input}
             />
             <button onClick={handleSend} style={styles.sendBtn}>
