@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { MessageSquare, X, Send, Bot, User, Loader2 } from "lucide-react";
 
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -12,7 +14,6 @@ const Chatbot = () => {
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef(null);
 
-  // Tự động cuộn xuống tin nhắn mới nhất
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -26,13 +27,12 @@ const Chatbot = () => {
     setLoading(true);
 
     try {
-      // Gọi API Python (Lưu ý cổng 8000 phải đang bật)
-      const response = await fetch("http://localhost:8000/chat", {
+      const response = await fetch("http://localhost:8001/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           question: input,
-          session_id: "guest_user", // Có thể thay bằng ID user thật
+          session_id: "guest_user",
         }),
       });
 
@@ -41,7 +41,7 @@ const Chatbot = () => {
     } catch (error) {
       setMessages((prev) => [
         ...prev,
-        { text: "Error connect to server AI!", sender: "bot" },
+        { text: "Error connecting to AI server!", sender: "bot" },
       ]);
     } finally {
       setLoading(false);
@@ -49,174 +49,112 @@ const Chatbot = () => {
   };
 
   return (
-    <div style={{ fontFamily: "Inter, sans-serif" }}>
-      {/* Nút tròn ở góc */}
-      <button onClick={() => setIsOpen(!isOpen)} style={styles.toggleBtn}>
-        💬
-      </button>
+    <div className="fixed bottom-6 right-6 z-[99999] drop-shadow-2xl">
+      {/* Toggle Button */}
+      <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={() => setIsOpen(!isOpen)}
+        className="h-16 w-16 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-2xl relative overflow-hidden group"
+      >
+        <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+        {isOpen ? <X className="h-7 w-7" /> : <MessageSquare className="h-7 w-7" />}
+      </motion.button>
 
-      {/* Cửa sổ Chat */}
-      {isOpen && (
-        <div style={styles.chatWindow}>
-          <div style={styles.header}>
-            <span>Trợ lý ảo Ticket-Box</span>
-            <button onClick={() => setIsOpen(false)} style={styles.closeBtn}>
-              ×
-            </button>
-          </div>
-
-          <div style={styles.body}>
-            {messages.map((msg, index) => (
-              <div
-                key={index}
-                style={{
-                  ...styles.message,
-                  ...(msg.sender === "bot" ? styles.botMsg : styles.userMsg),
-                }}
+      {/* Chat Window */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="absolute bottom-20 right-0 w-[400px] h-[600px] flex flex-col bg-gray-900 border border-white/10 rounded-2xl overflow-hidden shadow-2xl z-50"
+          >
+            {/* Header */}
+            <div className="p-4 border-b border-white/10 flex items-center justify-between bg-gray-800">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center text-white shadow-lg">
+                  <Bot className="h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white">TicketBox AI</h3>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span className="text-xs text-emerald-400 font-medium">Online</span>
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/10"
               >
-                {msg.text}
-              </div>
-            ))}
-            {loading && (
-              <div style={{ ...styles.message, ...styles.botMsg }}>
-                Finding...
-              </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
+                <X className="h-5 w-5" />
+              </button>
+            </div>
 
-          <div style={styles.footer}>
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleSend()}
-              placeholder="Ask about event..."
-              style={styles.input}
-            />
-            <button onClick={handleSend} style={styles.sendBtn}>
-              Gửi
-            </button>
-          </div>
-        </div>
-      )}
+            {/* Chat Body */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-900 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
+              {messages.map((msg, index) => (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  key={index}
+                  className={`flex ${msg.sender === "bot" ? "justify-start" : "justify-end"}`}
+                >
+                  <div
+                    className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-sm ${msg.sender === "bot"
+                        ? "bg-gray-800 text-gray-100 rounded-tl-none border border-gray-700"
+                        : "bg-blue-600 text-white rounded-tr-none"
+                      }`}
+                  >
+                    {msg.text}
+                  </div>
+                </motion.div>
+              ))}
+              {loading && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex justify-start"
+                >
+                  <div className="bg-gray-800 px-4 py-3 rounded-2xl rounded-tl-none border border-gray-700 flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-blue-400" />
+                    <span className="text-sm text-gray-400">Thinking...</span>
+                  </div>
+                </motion.div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* Input Footer */}
+            <div className="p-4 border-t border-white/10 bg-gray-800">
+              <div className="relative flex items-center">
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyPress={(e) => e.key === "Enter" && handleSend()}
+                  placeholder="Ask a question..."
+                  className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 pr-12 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                />
+                <button
+                  onClick={handleSend}
+                  disabled={!input.trim() || loading}
+                  className="absolute right-2 p-2 rounded-lg bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-md"
+                >
+                  <Send className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
-};
-
-// CSS Inline (Gọn, không cần file .css riêng)
-// --- SỬA LẠI PHẦN STYLE NÀY TRONG FILE Chatbot.jsx ---
-
-const styles = {
-  toggleBtn: {
-    position: "fixed",
-    bottom: "20px",
-    right: "20px",
-    width: "60px",
-    height: "60px",
-    borderRadius: "50%",
-    backgroundColor: "#3b82f6",
-    color: "white",
-    border: "none",
-    cursor: "pointer",
-    fontSize: "24px",
-    boxShadow: "0 4px 10px rgba(0,0,0,0.3)",
-    zIndex: 99999, // <--- Tăng lên thật cao để luôn nổi lên trên
-    transition: "transform 0.2s",
-  },
-  chatWindow: {
-    position: "fixed",
-    bottom: "90px",
-    right: "20px",
-    width: "350px",
-    height: "480px",
-    backgroundColor: "white",
-    borderRadius: "12px",
-    boxShadow: "0 8px 30px rgba(0,0,0,0.3)", // Đậm hơn chút cho đẹp
-    display: "flex",
-    flexDirection: "column",
-    zIndex: 99999, // <--- Tăng lên thật cao
-    overflow: "hidden",
-    border: "1px solid #e5e7eb",
-  },
-  // ... (Giữ nguyên header, closeBtn, body, message...)
-  header: {
-    backgroundColor: "#3b82f6",
-    color: "white",
-    padding: "12px 16px",
-    fontWeight: "600",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    fontSize: "15px",
-  },
-  closeBtn: {
-    background: "none",
-    border: "none",
-    color: "white",
-    fontSize: "20px",
-    cursor: "pointer",
-  },
-  body: {
-    flex: 1,
-    padding: "12px",
-    overflowY: "auto",
-    backgroundColor: "#f9fafb",
-    display: "flex",
-    flexDirection: "column",
-    gap: "8px",
-    color: "#333", // <--- THÊM: Ép màu chữ trong khung chat là màu đen
-  },
-  message: {
-    padding: "8px 12px",
-    borderRadius: "16px",
-    maxWidth: "85%",
-    fontSize: "14px",
-    lineHeight: "1.4",
-    wordBreak: "break-word",
-  },
-  botMsg: {
-    backgroundColor: "#e5e7eb",
-    color: "#1f2937",
-    alignSelf: "flex-start",
-    borderBottomLeftRadius: "4px",
-  },
-  userMsg: {
-    backgroundColor: "#3b82f6",
-    color: "white",
-    alignSelf: "flex-end",
-    borderBottomRightRadius: "4px",
-  },
-  footer: {
-    padding: "12px",
-    display: "flex",
-    borderTop: "1px solid #e5e7eb",
-    backgroundColor: "white",
-    gap: "8px",
-  },
-
-  // 👇 QUAN TRỌNG NHẤT LÀ PHẦN NÀY
-  input: {
-    flex: 1,
-    padding: "8px 12px",
-    borderRadius: "20px",
-    border: "1px solid #d1d5db",
-    outline: "none",
-    fontSize: "14px",
-    color: "black", // <--- BẮT BUỘC: Màu chữ đen (đè lên màu trắng của layout)
-    backgroundColor: "white", // Đảm bảo nền trắng
-  },
-
-  sendBtn: {
-    padding: "8px 16px",
-    borderRadius: "20px",
-    border: "none",
-    backgroundColor: "#3b82f6",
-    color: "white",
-    cursor: "pointer",
-    fontWeight: "600",
-    fontSize: "13px",
-  },
 };
 
 export default Chatbot;

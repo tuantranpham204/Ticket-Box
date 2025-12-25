@@ -8,10 +8,10 @@ from fastapi.middleware.cors import CORSMiddleware
 # ==========================================
 # 1. SYSTEM CONFIGURATION
 # ==========================================
-GOOGLE_API_KEY = "AIzaSyDKp-m2-797JO4RBbnTPY9xLqbDfnhNSx0"
+GOOGLE_API_KEY = "AIzaSyAEsyLe8U-Jmjb3XyatMBZSKwluXhDDe9A"
 
 db_user = "root"
-db_password = "123456"
+db_password = "12345678"
 db_host = "localhost"
 db_name = "ticket_box"
 
@@ -22,7 +22,10 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -227,3 +230,12 @@ async def chat_endpoint(request: ChatRequest):
     except Exception as e:
         print(f"🔥 Server Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+if __name__ == "__main__":
+    import uvicorn
+    # Workaround for PyCharm debugger: uvicorn.run() uses loop_factory which PyCharm's patched asyncio.run() doesn't support.
+    # We manually instantiate the server and run it with the standard asyncio.run().
+    import asyncio
+    config = uvicorn.Config(app=app, host="localhost", port=8001, loop="asyncio")
+    server = uvicorn.Server(config)
+    asyncio.run(server.serve())
