@@ -1,5 +1,6 @@
 package com.example.ticketboxcoreservice.service;
 
+import com.example.ticketboxcoreservice.enumf.Constants;
 import com.example.ticketboxcoreservice.enumf.ErrorCode;
 import com.example.ticketboxcoreservice.exception.AppException;
 import com.example.ticketboxcoreservice.exception.ResourceNotFoundException;
@@ -8,6 +9,7 @@ import com.example.ticketboxcoreservice.model.dto.request.OrderTicketRequest;
 import com.example.ticketboxcoreservice.model.dto.response.CustomPage;
 import com.example.ticketboxcoreservice.model.dto.response.MessageResponse;
 import com.example.ticketboxcoreservice.model.dto.response.OrderTicketResponse;
+import com.example.ticketboxcoreservice.model.dto.response.OrderTicketToken;
 import com.example.ticketboxcoreservice.model.entity.Order;
 import com.example.ticketboxcoreservice.model.entity.OrderTicket;
 import com.example.ticketboxcoreservice.repository.OrderRepository;
@@ -70,8 +72,7 @@ public class OrderTicketService {
         }
         OrderTicket orderTicket = orderTicketRepository.findById(orderTicketId).orElseThrow(
                 () -> new ResourceNotFoundException("ticket", "ticket id", orderTicketId));
-        if (!orderTicket.getStatus()
-                .equals(com.example.ticketboxcoreservice.enumf.Constants.ORDER_TICKET_STATUS_INACTIVE)) {
+        if (!orderTicket.getStatus().equals(Constants.ORDER_TICKET_STATUS_INACTIVE)) {
             throw new AppException(ErrorCode.ONLY_INACTIVE_ORDER_TICKETS_IS_UPDATABLE_AND_REMOVABLE);
         }
         updateOrderTotals(cart, orderTicket, orderTicketRequest.getSubQuantity());
@@ -109,43 +110,47 @@ public class OrderTicketService {
 
     // activate order ticket when its order is purchased
     public void activatePurchasedOrderTicket(OrderTicket orderTicket) {
-        orderTicket.setStatus(com.example.ticketboxcoreservice.enumf.Constants.ORDER_TICKET_STATUS_USED);
+        orderTicket.setStatus(Constants.ORDER_TICKET_STATUS_ACTIVE);
         orderTicket.setToken(generateOrderTicketToken(orderTicket));
     }
 
     // /api/order-ticket/qr/
+//    @Transactional
+//    public OrderTicket validateOrderTicketQRCode(OrderTicketQRCode orderTicketQRCode) {
+//        String token = qrCodeService.decodeQrCode(orderTicketQRCode.getQrCode());
+//        return validateOrderTicketByToken(token);
+//    }
+
     @Transactional
-    public OrderTicket validateOrderTicketQRCode(OrderTicketQRCode orderTicketQRCode) {
-        try {
-            String token = qrCodeService.decodeQrCode(orderTicketQRCode.getQrCode());
-            if (jwtService.isOrderTicketTokenExpired(token)) {
-                throw new AppException(ErrorCode.ORDER_TICKET_EXPIRED);
-            }
-            OrderTicket scannedOrderTicket = jwtService.extractClaimFromOrderTicketToken(token,
-                    claims -> claims.get("orderTicket", OrderTicket.class));
-            OrderTicket orderTicket = orderTicketRepository.findById(scannedOrderTicket.getId())
-                    .orElseThrow(() -> new ResourceNotFoundException("orderTicket", "orderTicketId",
-                            scannedOrderTicket.getId()));
-            if (!Objects.equals(orderTicket.getStatus(),
-                    com.example.ticketboxcoreservice.enumf.Constants.ORDER_TICKET_STATUS_ACTIVE)) {
-                throw new AppException(ErrorCode.ORDER_TICKET_USED);
-            }
-            if (!orderTicket.equals(scannedOrderTicket)) {
-                throw new AppException(ErrorCode.ORDER_TICKET_UNMATCHED);
-            }
-            orderTicket.setStatus(com.example.ticketboxcoreservice.enumf.Constants.ORDER_TICKET_STATUS_PENDING);
-            return orderTicketRepository.save(orderTicket);
-        } catch (Exception e) {
-            throw new AppException(ErrorCode.INTERNAL_ERROR);
+    public OrderTicketResponse validateOrderTicketByToken(String token) {
+        if (jwtService.isOrderTicketTokenExpired(token)) {
+            throw new AppException(ErrorCode.ORDER_TICKET_EXPIRED);
+        }
+        Long orderTicketId = jwtService.extractClaimFromOrderTicketToken(token,
+                claims -> claims.get("orderTicketId", Long.class));
+        OrderTicket orderTicket = orderTicketRepository.findById(orderTicketId)
+                .orElseThrow(() -> new ResourceNotFoundException("orderTicket", "orderTicketId", orderTicketId));
+
+        // Verify that the scanned token matches the token stored in database for this
+        // ticket
+        if (!Objects.equals(orderTicket.getToken(), token)) {
+            throw new AppException(ErrorCode.ORDER_TICKET_UNMATCHED);
         }
 
+        if (!Objects.equals(orderTicket.getStatus(), Constants.ORDER_TICKET_STATUS_ACTIVE)) {
+            throw new AppException(ErrorCode.ORDER_TICKET_USED);
+        }
+        orderTicket.setStatus(com.example.ticketboxcoreservice.enumf.Constants.ORDER_TICKET_STATUS_USED);
+        return modelMapper.map(orderTicketRepository.save(orderTicket), OrderTicketResponse.class);
     }
 
     @Transactional
-    public MessageResponse confirmOrder(OrderTicket orderTicket) {
-        orderTicket.setStatus(com.example.ticketboxcoreservice.enumf.Constants.ORDER_TICKET_STATUS_USED);
-        orderTicketRepository.save(orderTicket);
-        return new MessageResponse("Order ticket with id " + orderTicket.getId() + " is confirmed!");
+    public OrderTicketToken getOrderTicketToken(Long orderTicketId, Long buyerId) {
+        return OrderTicketToken.builder()
+                .token(orderTicketRepository.getTokenByOrderTicketIdAndBuyerId(orderTicketId, buyerId).orElseThrow(
+                        () -> new ResourceNotFoundException("order ticket token",
+                                String.format("order ticket id %s and buyer id %s", orderTicketId, buyerId), "")))
+                .build();
     }
 
     @Transactional
@@ -175,7 +180,7 @@ public class OrderTicketService {
 
     private String generateOrderTicketToken(OrderTicket orderTicket) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("orderTicket", orderTicket);
+        claims.put("orderTicketId", orderTicket.getId());
         String subject = orderTicket.getId().toString();
         return jwtService.generateOrderTicketToken(claims, subject,
                 orderTicket.getOrder().getPurchaseDate(),
@@ -197,4 +202,12 @@ public class OrderTicketService {
         orderRepository.save(order);
     }
 
+    public byte[] getOrderTicketQRCode(Long orderTicketId) {
+        OrderTicket orderTicket = orderTicketRepository.findById(orderTicketId)
+                .orElseThrow(() -> new ResourceNotFoundException("orderTicket", "orderTicketId", orderTicketId));
+        if (orderTicket.getToken() == null || orderTicket.getToken().isEmpty()) {
+            throw new AppException(ErrorCode.INTERNAL_ERROR); // Should have a token if purchased
+        }
+        return qrCodeService.encodeQrCode(orderTicket.getToken(), 300, 300);
+    }
 }

@@ -18,6 +18,8 @@ const CartPage = React.lazy(() => import("./pages/cartPage"));
 const OrderHistoryPage = React.lazy(() => import("./pages/orderHistoryPage"));
 const CategoryPage = React.lazy(() => import("./pages/categoryPage"));
 const UserProfilePage = React.lazy(() => import("./pages/userProfilePage"));
+const EventOrganizerPage = React.lazy(() => import("./pages/eventOrganizerPage"));
+const OrderDetailsPage = React.lazy(() => import("./pages/orderDetailsPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -61,6 +63,28 @@ export default function App() {
               />
 
               <Route
+                path="/update-event/:eventId"
+                element={
+                  <RoleBasedRoute
+                    roles={["ROLE_USER", "ROLE_ADMIN", "ROLE_APPROVER"]}
+                  >
+                    <EventCreationPage />
+                  </RoleBasedRoute>
+                }
+              />
+
+              <Route
+                path="/event-organizer"
+                element={
+                  <RoleBasedRoute
+                    roles={["ROLE_USER", "ROLE_ADMIN", "ROLE_APPROVER"]}
+                  >
+                    <EventOrganizerPage />
+                  </RoleBasedRoute>
+                }
+              />
+
+              <Route
                 path="/approver-dashboard"
                 element={
                   <RoleBasedRoute roles={['ROLE_APPROVER']}>
@@ -78,6 +102,12 @@ export default function App() {
               <Route path="/order-history" element={
                 <RoleBasedRoute roles={['ROLE_USER', 'ROLE_APPROVER', 'ROLE_ADMIN']}>
                   <OrderHistoryPage />
+                </RoleBasedRoute>
+              } />
+
+              <Route path="/order-details/:orderId" element={
+                <RoleBasedRoute roles={['ROLE_USER', 'ROLE_APPROVER', 'ROLE_ADMIN']}>
+                  <OrderDetailsPage />
                 </RoleBasedRoute>
               } />
 

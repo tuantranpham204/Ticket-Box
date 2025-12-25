@@ -13,10 +13,13 @@ const declineEvent = async ({ eventId, approverId }) => {
 };
 
 const getEventContract = async (eventId) => {
-    // This might be a blob or text, depending on the file type. 
-    // If it's a download, we might handle it differently.
-    // For now, assuming it returns a URL or contract data string.
     return await handleApiResponse(apiClient.get(`/events/contract/${eventId}`));
+};
+
+const validateTicket = async (token) => {
+    return await handleApiResponse(apiClient.put(`/order-tickets/validate-token`, null, {
+        params: { token }
+    }));
 };
 
 // React Query Hooks
@@ -57,5 +60,11 @@ export const useEventContract = (eventId) => {
         queryFn: async () => await getEventContract(eventId),
         enabled: !!eventId,
         staleTime: 1000 * 60 * 5,
+    });
+};
+
+export const useValidateTicketMutation = () => {
+    return useMutation({
+        mutationFn: validateTicket
     });
 };

@@ -65,3 +65,12 @@ export const useRegisterMutation = () => {
     },
   });
 };
+
+export const useVerifyPasswordMutation = () => {
+  return useMutation({
+    mutationFn: (password) => {
+      const { user } = useAuthStore.getState();
+      return login({ username: user.username, password });
+    },
+  });
+};

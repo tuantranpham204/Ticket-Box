@@ -9,6 +9,7 @@ import com.example.ticketboxcoreservice.model.dto.response.MessageResponse;
 import com.example.ticketboxcoreservice.model.dto.response.OrderResponse;
 import com.example.ticketboxcoreservice.model.entity.Order;
 import com.example.ticketboxcoreservice.model.entity.OrderTicket;
+import com.example.ticketboxcoreservice.model.entity.Ticket;
 import com.example.ticketboxcoreservice.repository.OrderRepository;
 import com.example.ticketboxcoreservice.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -49,7 +50,11 @@ public class OrderService {
         cart.setPurchaseDate(LocalDateTime.now());
         for (OrderTicket orderTicket : cart.getOrderTickets()) {
             orderTicketService.activatePurchasedOrderTicket(orderTicket);
+            Ticket ticket = orderTicket.getTicket();
+            ticket.setSold(ticket.getSold() + (long)orderTicket.getSubQuantity());
+            orderTicket.setTicket(ticket);
         }
+        orderRepository.save(cart);
 
         // create new empty cart for the user
         Order newCart = new Order();
@@ -69,14 +74,22 @@ public class OrderService {
     @Transactional
     public CustomPage<OrderResponse> getOrderHistoryByUserId(Long userId, Pageable pageable) {
         Page<Order> purchasedOrders = orderRepository.findOrderByUserIdAndPurchasedAsPage(userId,
-                com.example.ticketboxcoreservice.enumf.Constants.ORDER_STATUS_PURCHASED, pageable);
+                Constants.ORDER_STATUS_PURCHASED, pageable);
         return CustomPage.<OrderResponse>builder()
                 .pageNo(purchasedOrders.getNumber() + 1)
                 .pageSize(purchasedOrders.getSize())
+                .totalPages(purchasedOrders.getTotalPages())
                 .pageContent(purchasedOrders.getContent().stream()
                         .map(order -> modelMapper.map(order, OrderResponse.class))
                         .collect(Collectors.toList()))
                 .build();
+    }
+
+    @Transactional
+    public OrderResponse getOrderById(Long orderId) {
+        Order order = orderRepository.findById(orderId).orElseThrow(
+                () -> new ResourceNotFoundException("order", "order id", "order id"));
+        return modelMapper.map(order, OrderResponse.class);
     }
 
     private Order getCartByUserIdFunction(Long userId) {

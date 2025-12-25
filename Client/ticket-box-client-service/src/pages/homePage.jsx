@@ -13,7 +13,7 @@ import {
   useEventsByEventIds,
   useEventsByCategory,
 } from "../hooks/useEventHook";
-import { EVENT_STATUS } from "../utils/util";
+import { EVENT_STATUS, formatEventDate } from "../utils/util";
 
 // Destinations mock data
 const mockDestinations = [
@@ -54,7 +54,7 @@ const EventSection = ({ title, categoryId, link = "#" }) => {
     return (
       <div className="mb-12">
         <h3 className="mb-4 text-2xl font-semibold text-white">{title}</h3>
-        <div className="flex h-48 items-center justify-center rounded-lg bg-gray-800">
+        <div className="flex h-48 items-center justify-center rounded-2xl bg-gray-800/50 backdrop-blur-md border border-white/5">
           <Loader2 className="h-8 w-8 animate-spin text-blue-400" />
           <span className="ml-4 text-lg text-gray-300">Loading events...</span>
         </div>
@@ -66,7 +66,7 @@ const EventSection = ({ title, categoryId, link = "#" }) => {
     return (
       <div className="mb-12">
         <h3 className="mb-4 text-2xl font-semibold text-white">{title}</h3>
-        <div className="flex h-48 flex-col items-center justify-center rounded-lg border border-red-700 bg-red-900/20">
+        <div className="flex h-48 flex-col items-center justify-center rounded-2xl border border-red-700/50 bg-red-900/10 backdrop-blur-md">
           <AlertCircle className="h-8 w-8 text-red-500" />
           <p className="mt-2 text-red-400">
             Error loading events: {error.message}
@@ -82,13 +82,11 @@ const EventSection = ({ title, categoryId, link = "#" }) => {
     return null;
   }
 
-  // FIX: Removed the hook call from inside .map()
   const formattedEvents = events.map((event) => ({
     id: event.id,
     title: event.name,
     imageUrl: event.img?.url || `https://placehold.co/400x300/111/fff?text=${event.name}`,
-    // We do NOT pass 'price' here. The EventCard component will fetch it.
-    date: new Date(event.startDate).toLocaleDateString(),
+    date: formatEventDate(event.startDate),
   }));
 
   return (
@@ -99,42 +97,26 @@ const EventSection = ({ title, categoryId, link = "#" }) => {
 const EventCarouselSection = () => {
   const [carouselIndex, setCarouselIndex] = React.useState(0);
 
-  // Note: Ensure useEventsByEventIds is implemented in useEventHook if you use it here
-  // For now, this assumes it returns a list of events similar to the other hooks
   const {
     data: eventData,
     isLoading,
     isError,
-    error,
   } = useEventsByEventIds({ eventIds: [30004, 30005, 30003, 30002] })
 
 
   if (isLoading) {
     return (
       <div className="mb-12">
-        <div className="flex h-48 items-center justify-center rounded-lg bg-gray-800">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-400" />
-          <span className="ml-4 text-lg text-gray-300">Loading featured events...</span>
+        <div className="flex h-[400px] items-center justify-center rounded-2xl bg-gray-800/30 backdrop-blur-lg border border-white/5">
+          <Loader2 className="h-10 w-10 animate-spin text-blue-500" />
         </div>
       </div>
     );
   }
 
-  if (isError) {
-    return null;
-  };
+  if (isError) return null;
 
   const events = eventData || [];
-
-  const formattedFeaturedEvents = events.map((event) => ({
-    id: event.id,
-    title: event.name,
-    imageUrl: event.img?.url || `https://placehold.co/400x300/111/fff?text=${event.name}`,
-    // Carousel might display price differently or fetch it similarly
-    // For the carousel, let's assume we pass the ID and let a child component handle it, 
-    // or we skip price for the big banner to keep it simple.
-    date: new Date(event.startDate).toLocaleDateString(),
-  }));
 
   const nextSlide = () => {
     setCarouselIndex((prev) => (prev === events.length - 1 ? 0 : prev + 1));
@@ -144,88 +126,112 @@ const EventCarouselSection = () => {
   };
 
   return (
-    <div className="relative mb-12 w-full overflow-hidden rounded-xl">
+    <div className="relative mb-16 w-full overflow-hidden rounded-[2rem] shadow-2xl lighting-effect ring-1 ring-white/10">
       <div
-        className="flex transition-transform duration-500 ease-in-out"
+        className="flex transition-transform duration-700 cubic-bezier(0.4, 0, 0.2, 1)"
         style={{ transform: `translateX(-${carouselIndex * 100}%)` }}
       >
-        {formattedFeaturedEvents.map((event) => (
+        {events.map((event) => (
           <div
             key={event.id}
-            className="relative h-[400px] w-full flex-shrink-0"
+            className="relative h-[450px] w-full flex-shrink-0"
           >
             <img
-              src={event.imageUrl}
-              alt={event.title}
-              className="h-full w-full object-cover"
+              src={event.img?.url || `https://placehold.co/1200x600/111/fff?text=${event.name}`}
+              alt={event.name}
+              className="h-full w-full object-cover transition-transform duration-10000 hover:scale-110"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-            <div className="absolute bottom-8 left-8">
-              <h2 className="text-3xl font-bold text-white">{event.title}</h2>
-              <p className="text-gray-200">{event.date}</p>
+            <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent"></div>
+            <div className="absolute bottom-12 left-12 right-12">
+              <div className="inline-block rounded-full bg-blue-500/20 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-blue-400 backdrop-blur-md border border-blue-500/30 mb-4 animate-pulse">
+                Featured Event
+              </div>
+              <h2 className="text-5xl font-black text-white mb-4 tracking-tighter drop-shadow-2xl">{event.name}</h2>
+              <p className="text-xl text-gray-300 mb-8 max-w-2xl font-medium">{formatEventDate(event.startDate)}</p>
               <Link
                 to={`/event/${event.id}`}
-                className="mt-4 inline-block rounded-full bg-blue-600 px-6 py-2 font-semibold text-white hover:bg-blue-700"
+                className="inline-flex items-center gap-2 rounded-full bg-white px-8 py-4 font-bold text-gray-900 hover:bg-blue-400 hover:text-white transition-all active:scale-95 shadow-xl shadow-white/10"
               >
-                View Details
+                Get Tickets
+                <ArrowRight className="h-5 w-5" />
               </Link>
             </div>
           </div>
         ))}
       </div>
-      <button
-        onClick={prevSlide}
-        className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-black/30 p-2 text-white hover:bg-black/50"
-      >
-        <ChevronLeft className="h-6 w-6" />
-      </button>
-      <button
-        onClick={nextSlide}
-        className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-black/30 p-2 text-white hover:bg-black/50"
-      >
-        <ChevronRight className="h-6 w-6" />
-      </button>
+
+      {/* Navigation Controls */}
+      <div className="absolute right-8 bottom-12 flex gap-3">
+        <button
+          onClick={prevSlide}
+          className="group rounded-xl bg-white/10 p-4 transition-all hover:bg-white/20 hover:scale-110 border border-white/10 backdrop-blur-xl"
+        >
+          <ChevronLeft className="h-6 w-6 text-white group-hover:-translate-x-1 transition-transform" />
+        </button>
+        <button
+          onClick={nextSlide}
+          className="group rounded-xl bg-white/10 p-4 transition-all hover:bg-white/20 hover:scale-110 border border-white/10 backdrop-blur-xl"
+        >
+          <ChevronRight className="h-6 w-6 text-white group-hover:translate-x-1 transition-transform" />
+        </button>
+      </div>
+
+      {/* Slide Indicators */}
+      <div className="absolute left-1/2 bottom-8 flex -translate-x-1/2 gap-2">
+        {events.map((_, i) => (
+          <div
+            key={i}
+            className={`h-1.5 rounded-full transition-all duration-300 ${carouselIndex === i ? 'w-8 bg-blue-500' : 'w-2 bg-white/30'}`}
+          />
+        ))}
+      </div>
     </div>
   );
 };
 
 const HomePage = () => {
   return (
-    <div className="container mx-auto max-w-7xl px-4 py-8">
+    <div className="bg-gray-950">
+      <div className="container mx-auto max-w-7xl px-4 py-8">
+        <EventCarouselSection />
 
-      <EventCarouselSection />
+        <div className="space-y-20">
+          <EventSection title="🎭 Arts & Theater" categoryId={2} link="/category/2" />
+          <EventSection title="⚽ Sports Highlights" categoryId={3} link="/category/3" />
 
-      <EventSection title="This Weekend" categoryId={1} link="/category/1" />
-      <EventSection title="Arts & Theater" categoryId={2} link="/category/2" />
-      <EventSection title="Sports" categoryId={3} link="/category/3" />
+          {/* Premium Ad Banner */}
+          <div className="relative overflow-hidden rounded-[2.5rem] liquid-glass p-1 group">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-blue-600/20 animate-gradient-x opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
+            <img
+              src="https://vnpay.vn/s1/statics.vnpay.vn/2022/6/0t98r20u2ruh1654574469292.jpg"
+              alt="Ad Banner"
+              className="relative h-64 w-full object-cover rounded-[2.4rem] opacity-90 transition-all duration-700 group-hover:opacity-100 group-hover:scale-[1.01]"
+            />
+          </div>
 
-      <div className="mb-12 overflow-hidden rounded-lg">
-        <img
-          src="https://vnpay.vn/s1/statics.vnpay.vn/2022/6/0t98r20u2ruh1654574469292.jpg"
-          alt="Ad Banner"
-          className="h-auto w-full"
-        />
-      </div>
+          <EventSection title="🎵 Music Festival" categoryId={1} link="/category/1" />
 
-      <EventSection title="Music" categoryId={1} link="/category/1" />
-      <EventSection title="Other Events" categoryId={4} link="/category/4" />
-
-      <div className="mb-12">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-2xl font-semibold text-white">
-            Popular Destinations
-          </h3>
-          <Link
-            to="/destinations"
-            className="flex items-center text-sm text-blue-400 hover:underline"
-          >
-            See all <ArrowRight className="ml-1 h-4 w-4" />
-          </Link>
-        </div>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-          {mockDestinations.map((dest) => (
-            <DestinationCard key={dest.id} dest={dest} />
-          ))}
+          <div className="mb-12">
+            <div className="mb-8 flex items-end justify-between px-2">
+              <div>
+                <p className="text-blue-500 font-bold uppercase tracking-widest text-xs mb-2">Explore the world</p>
+                <h3 className="text-4xl font-black text-white tracking-tighter">
+                  Popular Destinations
+                </h3>
+              </div>
+              <Link
+                to="/destinations"
+                className="flex items-center gap-2 rounded-full bg-gray-800/50 px-6 py-3 text-sm font-bold text-gray-300 hover:bg-gray-800 hover:text-white transition-all border border-white/5 backdrop-blur-md"
+              >
+                See all <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
+              {mockDestinations.map((dest) => (
+                <DestinationCard key={dest.id} dest={dest} />
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>

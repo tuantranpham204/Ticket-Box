@@ -1,6 +1,5 @@
 package com.example.ticketboxcoreservice.controller;
 
-
 import com.example.ticketboxcoreservice.model.dto.request.OrderTicketQRCode;
 import com.example.ticketboxcoreservice.model.dto.request.OrderTicketRequest;
 import com.example.ticketboxcoreservice.model.dto.response.ApiResponse;
@@ -23,7 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/api/order-tickets")
 @RequiredArgsConstructor
-@Tag(name="Order Ticket")
+@Tag(name = "Order Ticket")
 public class OrderTicketController {
     private final OrderTicketService orderTicketService;
 
@@ -42,7 +41,8 @@ public class OrderTicketController {
             @PathVariable("userId") Long userId,
             @PathVariable("orderTicketId") Long orderTicketId,
             @RequestBody @Valid OrderTicketRequest orderTicketRequest) {
-        ApiResponse response = ApiResponse.succeed(orderTicketService.updateOrderTicket(userId, orderTicketId, orderTicketRequest));
+        ApiResponse response = ApiResponse
+                .succeed(orderTicketService.updateOrderTicket(userId, orderTicketId, orderTicketRequest));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -54,20 +54,20 @@ public class OrderTicketController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @Operation(summary = "validate order ticket")
-    @PutMapping(path="/validate", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ApiResponse> validateOrderTicket(
-            @RequestPart("qrCode") @Valid MultipartFile qrCode) {
-        OrderTicketQRCode orderTicketQRCode = new OrderTicketQRCode(qrCode);
-        ApiResponse response = ApiResponse.succeed(orderTicketService.validateOrderTicketQRCode(orderTicketQRCode));
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
+//    @Operation(summary = "validate order ticket")
+//    @PutMapping(path = "/validate", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+//    public ResponseEntity<ApiResponse> validateOrderTicket(
+//            @RequestPart("qrCode") @Valid MultipartFile qrCode) {
+//        OrderTicketQRCode orderTicketQRCode = new OrderTicketQRCode(qrCode);
+//        ApiResponse response = ApiResponse.succeed(orderTicketService.validateOrderTicketQRCode(orderTicketQRCode));
+//        return new ResponseEntity<>(response, HttpStatus.OK);
+//    }
 
-    @Operation(summary = "validate order ticket by user id")
-    @PutMapping("/confirm")
-    public ResponseEntity<ApiResponse> validateOrderTicket(
-            @RequestBody @Valid OrderTicket orderTicket) {
-        ApiResponse response = ApiResponse.succeed(orderTicketService.confirmOrder(orderTicket));
+    @Operation(summary = "validate order ticket by token")
+    @PutMapping(path = "/validate-token")
+    public ResponseEntity<ApiResponse> validateOrderTicketByToken(
+            @RequestParam("token") String token) {
+        ApiResponse response = ApiResponse.succeed(orderTicketService.validateOrderTicketByToken(token));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -77,28 +77,39 @@ public class OrderTicketController {
             @PathVariable("userId") Long userId,
             @RequestParam(value = "pageNo", defaultValue = "1", required = false) int pageNo,
             @RequestParam(value = "pageSize", defaultValue = "10", required = false) int pageSize,
-            @RequestParam(value = "sortBy", defaultValue = "id", required = false) String sortBy
-    ) {
+            @RequestParam(value = "sortBy", defaultValue = "id", required = false) String sortBy) {
         Pageable pageable = PageRequest.of(pageNo - 1, pageSize, Sort.by(sortBy).ascending());
         ApiResponse response = ApiResponse.succeed(orderTicketService.getCartTicketsByUserId(userId, pageable));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
     @Operation(summary = "get order tickets by order id")
     @GetMapping("/order/{orderId}")
     public ResponseEntity<ApiResponse> getOrderTicketsByOrderId(
             @PathVariable("orderId") Long orderId,
             @RequestParam(value = "pageNo", defaultValue = "1", required = false) int pageNo,
             @RequestParam(value = "pageSize", defaultValue = "10", required = false) int pageSize,
-            @RequestParam(value = "sortBy", defaultValue = "id", required = false) String sortBy
-    ) {
+            @RequestParam(value = "sortBy", defaultValue = "id", required = false) String sortBy) {
         Pageable pageable = PageRequest.of(pageNo - 1, pageSize, Sort.by(sortBy).ascending());
         ApiResponse response = ApiResponse.succeed(orderTicketService.getOrderTicketsByOrderId(orderId, pageable));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @Operation(summary = "get order ticket qr code")
+    @GetMapping(value = "/qr/{orderTicketId}", produces = MediaType.IMAGE_PNG_VALUE)
+    public ResponseEntity<byte[]> getOrderTicketQRCode(
+            @PathVariable("orderTicketId") Long orderTicketId) {
+        byte[] qrCode = orderTicketService.getOrderTicketQRCode(orderTicketId);
+        return ResponseEntity.ok().contentType(MediaType.IMAGE_PNG).body(qrCode);
+    }
 
-    
-    
-
+    @Operation(summary = "get order ticket token by order ticket id and buyer id")
+    @GetMapping(value = "/token/{orderTicketId}/{buyerId}")
+    public ResponseEntity<ApiResponse> getOrderTicketToken(
+            @PathVariable("orderTicketId") Long orderTicketId,
+            @PathVariable("buyerId") Long buyerId) {
+        ApiResponse response = ApiResponse.succeed(orderTicketService.getOrderTicketToken(orderTicketId, buyerId));
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 
 }

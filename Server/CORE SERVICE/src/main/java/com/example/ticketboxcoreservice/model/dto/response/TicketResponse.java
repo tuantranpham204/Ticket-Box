@@ -19,5 +19,7 @@ public class TicketResponse {
     private Long sold;
     private Integer status;
     private Double ticketPrice;
+    private Long minQtyPerOrder;
+    private Long maxQtyPerOrder;
     private EventResponse event;
 }
