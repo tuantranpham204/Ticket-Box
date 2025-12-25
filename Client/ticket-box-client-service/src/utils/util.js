@@ -11,30 +11,31 @@ export const EVENT_STATUS = {
   PENDING: 1, // event creation request is pending
   UPCOMING: 2, // event creation request is approved and today is before its start date
   RUNNING: 3,
-  ENDED: 4,
+  ENDED: 4, // event creation request is approved and today is after its end date
 };
 
 export const TICKET_STATUS = {
   DECLINED: -1, // ticket creation request get declination from approvers
   CANCELED: 0, // ticket creation request get canceled by its creator
   PENDING: 1, // ticket creation request is pending
-  UPCOMING: 2, // ticket creation request is approved and today is before its start date
-  RUNNING: 3,
-  ENDED: 4,
+  UPCOMING: 2, // ticket is approved and today is before start sale date
+  REMAINING: 3, // ticket is approved and sold ticket is lower to capacity and today is between start and end date
+  SOLD_OUT: 4, // ticket is approved and sold ticket is equal to capacity and today is between start and end date
+  ENDED: 5, // ticket is approved and today is after end sale date
 };
 
 export const ORDER_STATUS = {
-  DECLINED: -1, // // order payment is declined by payment system
-  NOT_PURCHASED: 0, // torder payment is waiting for response from payment system
-  PENDING: 1, // order is not purchased, which plays as a cart
+  DECLINED: -1, // order payment is declined by payment system
+  NOT_PURCHASED: 0, // order is not purchased, which plays as a cart
+  PENDING: 1, // order payment is waiting for response from payment system
   PURCHASED: 2, // order is purchased
 };
 
 export const ORDER_TICKET_STATUS = {
   INACTIVE: 0, // order ticket is created and order is not purchased
   ACTIVE: 1, // order ticket is created and order is purchased => QR code is generated
-  USED: 3, // QR code is scanned
   PENDING: 2,
+  USED: 3, // QR code is scanned
 };
 
 export const SELF_RELATIONSHIP_ID = 1;

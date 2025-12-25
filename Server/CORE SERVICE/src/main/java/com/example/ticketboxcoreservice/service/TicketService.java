@@ -42,6 +42,7 @@ public class TicketService {
         ticket.setStatus(Constants.TICKET_STATUS_PENDING);
         ticket.setUpdateDate(LocalDateTime.now());
         ticket.setCreateDate(LocalDateTime.now());
+        ticket.setSold(0l);
         if (!ticket.validateSaleDate()) throw new AppException(ErrorCode.INVALID_TICKET_SALE_DATE);
         return modelMapper.map(ticketRepository.save(ticket), TicketResponse.class);
     }

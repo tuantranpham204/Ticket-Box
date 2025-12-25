@@ -109,7 +109,6 @@ public class SecurityConfig {
                                 .hasAnyRole("ADMIN", "APPROVER")
                                 .requestMatchers(HttpMethod.GET, "/api/events/contract/**")
                                 .hasAnyRole("ADMIN", "APPROVER")
-
                                 // Admin endpoints
                                 .requestMatchers(HttpMethod.POST, "/api/categories/**").hasRole("ADMIN")
                                 .requestMatchers(HttpMethod.PUT, "/api/categories/**").hasRole("ADMIN")

@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useOrderHistory } from '../hooks/useOrderHistoryHook';
 import { Loader2, Receipt, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, ExternalLink, ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { ORDER_STATUS } from '../utils/util';
 
 const OrderHistoryPage = () => {
     const [pageNo, setPageNo] = useState(1);
@@ -50,14 +51,32 @@ const OrderHistoryPage = () => {
         });
     };
 
+    const getStatusLabel = (status) => {
+        switch (status) {
+            case ORDER_STATUS.PURCHASED:
+                return 'PURCHASED';
+            case ORDER_STATUS.PENDING:
+                return 'PENDING';
+            case ORDER_STATUS.NOT_PURCHASED:
+                return 'NOT PURCHASED';
+            case ORDER_STATUS.DECLINED:
+                return 'DECLINED';
+            default:
+                return typeof status === 'string' ? status.toUpperCase() : 'UNKNOWN';
+        }
+    };
+
     const getStatusColor = (status) => {
-        switch (status?.toUpperCase()) {
-            case 'COMPLETED':
+        const statusStr = getStatusLabel(status);
+        switch (statusStr) {
+            case 'PURCHASED':
                 return 'bg-green-500/10 text-green-500 border-green-500/20';
             case 'PENDING':
                 return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
-            case 'CANCELLED':
+            case 'DECLINED':
                 return 'bg-red-500/10 text-red-500 border-red-500/20';
+            case 'NOT PURCHASED':
+                return 'bg-gray-500/10 text-gray-500 border-gray-500/20';
             default:
                 return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
         }
@@ -160,7 +179,7 @@ const OrderHistoryPage = () => {
                                             </th>
                                             <th className="px-6 py-4 cursor-pointer hover:bg-gray-800/50 transition-colors" onClick={() => handleSort('purchasedAt')}>
                                                 <div className="flex items-center">
-                                                    Date <SortIcon field="purchasedAt" />
+                                                    Date, Time <SortIcon field="purchasedAt" />
                                                 </div>
                                             </th>
                                             <th className="px-6 py-4 text-center cursor-pointer hover:bg-gray-800/50 transition-colors" onClick={() => handleSort('quantity')}>
@@ -185,28 +204,31 @@ const OrderHistoryPage = () => {
                                         {orders.map((order) => (
                                             <tr key={order.id} className="group transition-colors hover:bg-blue-500/5">
                                                 <td className="px-6 py-4 font-mono text-sm font-bold text-blue-400">
-                                                    {order.orderCode}
+                                                    {order.id}
                                                 </td>
                                                 <td className="px-6 py-4 text-sm text-gray-400">
-                                                    {formatDate(order.purchasedAt)}
+                                                    {formatDate(order.purchaseDate)}
                                                 </td>
                                                 <td className="px-6 py-4 text-center font-medium text-gray-200">
                                                     {order.quantity}
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
                                                     <div className="text-base font-bold text-white">
-                                                        {formatCurrency(order.finalAmount)} đ
+                                                        {formatCurrency(order?.totalPrice || order?.finalAmount)} đ
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 text-center text-xs">
                                                     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-semibold border ${getStatusColor(order.status)}`}>
-                                                        {order.status || 'SUCCESS'}
+                                                        {getStatusLabel(order.status)}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 text-center">
-                                                    <button className="p-2 rounded-lg text-gray-500 hover:text-blue-400 transition-colors">
+                                                    <Link
+                                                        to={`/order-details/${order.id}`}
+                                                        className="p-2 inline-block rounded-lg text-gray-500 hover:text-blue-400 transition-colors"
+                                                    >
                                                         <ExternalLink className="h-4 w-4" />
-                                                    </button>
+                                                    </Link>
                                                 </td>
                                             </tr>
                                         ))}

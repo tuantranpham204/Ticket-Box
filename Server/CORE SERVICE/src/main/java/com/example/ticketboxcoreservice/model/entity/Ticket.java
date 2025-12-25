@@ -51,10 +51,11 @@ public class Ticket {
     }
     public void approve() {
         updateDate = LocalDateTime.now();
+        if (sold == null) sold = 0L;
         if (LocalDateTime.now().isBefore(startSale)) status = Constants.TICKET_STATUS_UPCOMING;
         else if (LocalDateTime.now().isAfter(endSale)) status = Constants.TICKET_STATUS_ENDED;
-        else if (LocalDateTime.now().isBefore(startSale) && LocalDateTime.now().isAfter(endSale) && sold < capacity) status = Constants.TICKET_STATUS_REMAINING;
-        else if (LocalDateTime.now().isBefore(startSale) && LocalDateTime.now().isAfter(endSale) && sold == capacity) status = Constants.TICKET_STATUS_SOLD_OUT;
+        else if (LocalDateTime.now().isAfter(startSale) && LocalDateTime.now().isBefore(endSale) && sold < capacity) status = Constants.TICKET_STATUS_REMAINING;
+        else if (LocalDateTime.now().isAfter(startSale) && LocalDateTime.now().isBefore(endSale) && sold >= capacity) status = Constants.TICKET_STATUS_SOLD_OUT;
         else throw new AppException(ErrorCode.SOLD_TICKET_CANNOT_EXCEED_ITS_CAPACITY);
     }
     public void cancel() {

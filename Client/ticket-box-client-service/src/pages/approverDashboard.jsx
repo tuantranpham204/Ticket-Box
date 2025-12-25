@@ -14,8 +14,10 @@ import {
     ChevronRight,
     MapPin,
     Calendar,
-    X
+    X,
+    QrCode
 } from "lucide-react";
+import TicketScannerModal from "../components/TicketScannerModal";
 
 const ContractModal = ({ eventId, onClose }) => {
     const { data: rawContractData, isLoading, isError, error } = useEventContract(eventId);
@@ -95,6 +97,7 @@ const ApproverDashboard = () => {
     const [selectedStatus, setSelectedStatus] = useState(EVENT_STATUS.PENDING);
     const [currentPage, setCurrentPage] = useState(1);
     const [selectedContractEventId, setSelectedContractEventId] = useState(null);
+    const [isScannerOpen, setIsScannerOpen] = useState(false);
     const pageSize = 10;
 
     // Use the hook with pagination
@@ -147,9 +150,24 @@ const ApproverDashboard = () => {
     return (
         <div className="min-h-screen bg-gray-950 px-4 py-12 text-white lighting-effect">
             <div className="container mx-auto max-w-7xl">
-                <div className="mb-12">
-                    <h1 className="text-4xl font-black tracking-tighter uppercase">Approver Command Center</h1>
-                    <p className="text-gray-500 mt-2 font-medium tracking-tight uppercase text-xs">Review and validate incoming event registrations for platform inclusion.</p>
+                <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+                    <div>
+                        <h1 className="text-4xl font-black tracking-tighter uppercase">Approver Command Center</h1>
+                        <p className="text-gray-500 mt-2 font-medium tracking-tight uppercase text-xs">Review and validate incoming event registrations for platform inclusion.</p>
+                    </div>
+
+                    <button
+                        onClick={() => setIsScannerOpen(true)}
+                        className="group flex items-center gap-4 rounded-3xl liquid-glass px-8 py-4 border border-blue-500/20 shadow-2xl shadow-blue-500/10 hover:bg-blue-600 transition-all active:scale-95"
+                    >
+                        <div className="h-10 w-10 rounded-2xl bg-blue-500/20 flex items-center justify-center text-blue-400 group-hover:bg-white group-hover:text-blue-600 transition-colors">
+                            <QrCode className="h-5 w-5" />
+                        </div>
+                        <div className="flex flex-col items-start pr-4">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-white">Entry Point</span>
+                            <span className="text-sm font-black uppercase tracking-tighter text-blue-400 group-hover:text-white transition-colors">Validate Ticket</span>
+                        </div>
+                    </button>
                 </div>
 
                 {/* --- Tabs --- */}
@@ -339,6 +357,13 @@ const ApproverDashboard = () => {
                     <ContractModal
                         eventId={selectedContractEventId}
                         onClose={() => setSelectedContractEventId(null)}
+                    />
+                )}
+
+                {/* Scanner Modal */}
+                {isScannerOpen && (
+                    <TicketScannerModal
+                        onClose={() => setIsScannerOpen(false)}
                     />
                 )}
             </div>

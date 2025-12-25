@@ -24,7 +24,7 @@ import {
   CloudUpload
 } from "lucide-react";
 import { useCreateEventMutation, useUpdateEventMutation, useEventByEventId, useCancelEventMutation } from "../hooks/useEventHook";
-import { useCreateTicketMutation, useUpdateTicketMutation } from "../hooks/useTicketHook";
+import { useCreateTicketMutation, useUpdateTicketMutation, useGetTicketsByEventId } from "../hooks/useTicketHook";
 import { CAT, EVENT_STATUS, TICKET_STATUS } from "../utils/util";
 
 const DocumentPreviewModal = ({ url, title, onClose }) => {
@@ -108,6 +108,8 @@ const EventCreationPage = () => {
           capacity: "",
           startSale: "",
           endSale: "",
+          minQtyPerOrder: 1,
+          maxQtyPerOrder: 5,
         },
       ],
     },
@@ -164,8 +166,9 @@ const EventCreationPage = () => {
     }
   };
 
-  // --- Fetch Event Data (Update Mode) ---
+  // --- Fetch Event & Ticket Data (Update Mode) ---
   const { data: eventToUpdate, isLoading: isFetchingEvent } = useEventByEventId(eventId);
+  const { data: ticketsData, isLoading: isFetchingTickets } = useGetTicketsByEventId(eventId);
 
   // --- Effect: Pre-fill Form (Update Mode) ---
   useEffect(() => {
@@ -191,15 +194,19 @@ const EventCreationPage = () => {
         }
       }
 
-      // Pre-fill tickets if they exist
-      if (eventToUpdate.tickets && eventToUpdate.tickets.length > 0) {
-        const mappedTickets = eventToUpdate.tickets.map(t => ({
+      // Pre-fill tickets from separate endpoint if they exist
+      const actualTickets = ticketsData?.pageContent || (Array.isArray(ticketsData) ? ticketsData : []);
+
+      if (actualTickets && actualTickets.length > 0) {
+        const mappedTickets = actualTickets.map(t => ({
           id: t.id,
           type: t.type,
-          unitPrice: t.unitPrice.toString(),
+          unitPrice: (t.unitPrice || t.ticketPrice || 0).toString(),
           capacity: t.capacity.toString(),
           startSale: t.startSale ? t.startSale.slice(0, 16) : "",
           endSale: t.endSale ? t.endSale.slice(0, 16) : "",
+          minQtyPerOrder: t.minQtyPerOrder || 1,
+          maxQtyPerOrder: t.maxQtyPerOrder || 5,
         }));
         replace(mappedTickets);
         resetData.tickets = mappedTickets;
@@ -208,7 +215,7 @@ const EventCreationPage = () => {
       // Populate the form using reset
       reset(resetData);
     }
-  }, [isUpdateMode, eventToUpdate, isFetchingEvent, reset, replace]);
+  }, [isUpdateMode, eventToUpdate, ticketsData, isFetchingEvent, isFetchingTickets, reset, replace]);
 
   // --- Watch Fields for Logic & Previews ---
   const isOnline = watch("online");
@@ -302,6 +309,8 @@ const EventCreationPage = () => {
           capacity: parseInt(ticket.capacity),
           startSale: ticket.startSale,
           endSale: ticket.endSale,
+          minQtyPerOrder: parseInt(ticket.minQtyPerOrder),
+          maxQtyPerOrder: parseInt(ticket.maxQtyPerOrder),
           status: TICKET_STATUS.PENDING,
         };
 
@@ -335,7 +344,8 @@ const EventCreationPage = () => {
     updateEventMutation.isPending ||
     createTicketMutation.isPending ||
     updateTicketMutation.isPending ||
-    isFetchingEvent;
+    isFetchingEvent ||
+    isFetchingTickets;
 
   if (isUpdateMode && isFetchingEvent) {
     return (
@@ -784,7 +794,7 @@ const EventCreationPage = () => {
                           )}
                         </div>
 
-                        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
+                        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-6 items-start">
                           {/* Ticket Type Name */}
                           <div className="md:col-span-2 lg:col-span-1">
                             <label className={labelClasses}>Type Name</label>
@@ -816,6 +826,28 @@ const EventCreationPage = () => {
                               type="number"
                               {...register(`tickets.${index}.capacity`, { required: "Required", min: 1 })}
                               placeholder="100"
+                              className={inputClasses}
+                            />
+                          </div>
+
+                          {/* Order Limits: Min */}
+                          <div>
+                            <label className={labelClasses}>Min Qty</label>
+                            <input
+                              type="number"
+                              {...register(`tickets.${index}.minQtyPerOrder`, { required: "Required", min: 1 })}
+                              placeholder="1"
+                              className={inputClasses}
+                            />
+                          </div>
+
+                          {/* Order Limits: Max */}
+                          <div>
+                            <label className={labelClasses}>Max Qty</label>
+                            <input
+                              type="number"
+                              {...register(`tickets.${index}.maxQtyPerOrder`, { required: "Required", min: 1 })}
+                              placeholder="5"
                               className={inputClasses}
                             />
                           </div>
@@ -855,6 +887,8 @@ const EventCreationPage = () => {
                           capacity: "",
                           startSale: "",
                           endSale: "",
+                          minQtyPerOrder: 1,
+                          maxQtyPerOrder: 5,
                         })
                       }
                       className="flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-white/5 py-8 text-[10px] font-black uppercase tracking-[0.2em] text-gray-600 transition-all hover:border-emerald-500/30 hover:bg-emerald-500/5 hover:text-emerald-400 active:scale-[0.99]"

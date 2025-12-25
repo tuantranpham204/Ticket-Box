@@ -1,8 +1,8 @@
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import apiClient, { handleApiResponse } from '../api/apiClient';
 import { useAuthStore } from '../store/useAuthStore'
-// API Functions 
 
+// API Functions 
 const getEventById = async (eventId) => {
   if (!eventId) return Promise.reject(new Error('Event ID is required.'));
   return await handleApiResponse(apiClient.get(`/events/event/${eventId}`));

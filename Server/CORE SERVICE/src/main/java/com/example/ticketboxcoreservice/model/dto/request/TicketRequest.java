@@ -19,5 +19,7 @@ public class TicketRequest {
     private Boolean status;
     private Long capacity;
     private Long sold;
+    private Long minQtyPerOrder;
+    private Long maxQtyPerOrder;
     private Double unitPrice;
 }

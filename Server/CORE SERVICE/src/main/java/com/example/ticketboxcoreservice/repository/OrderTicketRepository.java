@@ -22,4 +22,6 @@ public interface OrderTicketRepository extends JpaRepository<OrderTicket,Long> {
     @Query("SELECT ot.subQuantity FROM OrderTicket ot WHERE ot.id=:orderTicketId")
     Optional<Long> getSubQuantityByOrderTicketId(Long orderTicketId);
 
+    @Query("SELECT ot.token FROM OrderTicket ot WHERE ot.id=:orderTicketId AND ot.order.buyer.id=:buyerId")
+    Optional<String> getTokenByOrderTicketIdAndBuyerId(Long orderTicketId, Long buyerId);
 }

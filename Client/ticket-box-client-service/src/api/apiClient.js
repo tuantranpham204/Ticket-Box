@@ -56,17 +56,28 @@ apiClient.interceptors.response.use(
 export const handleApiResponse = async (request) => {
   try {
     const response = await request;
-    // `data` here is the Axios response data, which is our backend's ApiResponse object
-    const apiResponse = response.data;
+    let apiResponse = response.data;
 
-    if (apiResponse.code == 200 && apiResponse.data !== undefined) {
-      return apiResponse.data;
+    // Handle stringified JSON (often happens with circular refs or wrong Content-Type)
+    if (typeof apiResponse === 'string') {
+      try {
+        apiResponse = JSON.parse(apiResponse);
+      } catch (e) {
+        console.error("Failed to parse API response string", apiResponse);
+      }
+    }
+
+    // Successful code 200: Return data if present, otherwise true
+    if (apiResponse && apiResponse.code == 200) {
+      return apiResponse.data !== undefined ? apiResponse.data : true;
     } else {
-      const msg = apiResponse.message || 'An API error occurred.';
-      toast.error(msg); // Toast logical errors too
+      const msg = apiResponse?.message || 'An API error occurred.';
+      console.error(`[API ERROR ${apiResponse?.code}]`, apiResponse);
+      toast.error(msg);
       throw new Error(msg);
     }
   } catch (error) {
+    console.error('[NETWORK/GATEWAY ERROR]', error.response?.data || error.message);
     throw error;
   }
 };
